@@ -1,0 +1,10 @@
+{
+    "manifest_version": 3,
+    "name": "Inspiro",
+    "description": "A simple Chrome extension example using Manifest V3 and HTML.",
+    "version": "0.1",
+    "action": {
+        "default_popup": "main.html"
+    },
+    "permissions": []
+}
