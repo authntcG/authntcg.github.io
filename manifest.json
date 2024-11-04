@@ -4,7 +4,10 @@
     "description": "A simple Chrome extension example using Manifest V3 and HTML.",
     "version": "0.1",
     "action": {
-        "default_popup": "main.html"
+        "default_popup": "index.html"
     },
-    "permissions": []
+    "permissions": [
+        "geolocation",
+        "activeTab"
+    ]
 }

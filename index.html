@@ -230,6 +230,7 @@
         position: relative;
         text-align: center;
         color: rgb(255, 255, 255);
+        margin-bottom: 0;
     }
 
     .clock-period {
@@ -265,10 +266,6 @@
         background-color: rgba(255, 0, 0, 0.6);
     }
 </style>
-<script>
-
-</script>
-
 <body>
     <!-- Preload Page -->
     <div id="preload" class="preload-page">
@@ -282,6 +279,7 @@
         <div class="row">
             <div class="col-12 mb-0">
                 <h1 class="text-start clock">Wait...</h1>
+                <h6 class="pt-0 h-6" id="location-info"></h6>
             </div>
             <form action="https://www.google.com/search" method="get">
                 <div class="col-12 mb-2">
@@ -642,9 +640,9 @@
         return { iconClass, message };
     }
     
-    function fetchWeatherData() {
+    function fetchWeatherData(lat, lon) {        
         $.ajax({
-            url: "https://api.open-meteo.com/v1/forecast?latitude=-6.9501&longitude=107.6232&current=temperature_2m,apparent_temperature,precipitation,weather_code,surface_pressure,wind_speed_10m,wind_direction_10m&hourly=precipitation,weather_code&daily=precipitation_sum&forecast_days=1",
+            url: `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,apparent_temperature,precipitation,weather_code,surface_pressure,wind_speed_10m,wind_direction_10m&hourly=precipitation,weather_code&daily=precipitation_sum&forecast_days=1`,
             type: "GET",
             success: function(data) {
                 const values = data.current;
@@ -712,8 +710,46 @@
         });
     }
 
+    function getGeoLocation() {
+        if (navigator.geolocation) {
+            navigator.geolocation.watchPosition(
+                function (position) {
+                    var lat = position.coords.latitude;
+                    var lon = position.coords.longitude;
+                    
+                    if (lat, lon) {
+                        fetchWeatherData(lat, lon);
+                        getLocationInfo(lat, lon);
+                    }
+                }, 
+                function (error) {
+                    console.error(error.message);
+                }
+            );
+        } else {
+            console.error('Cannot get geolocation data!');
+        }
+    }
+
+    function getLocationInfo(lat, lon) {
+        $.ajax({
+            url: `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lon}`,
+            type: "GET",
+            success: function(data) {
+                const display_name = data.display_name;
+                const addr = data.address;
+
+                var loc_info = document.getElementById('location-info');
+                $(loc_info).html(`<i class="bi bi-geo"></i> ${addr.village}, ${addr.city}`);
+            },
+            error: function(data) {
+                console.error("Error fetching data:", error)
+            }
+        });
+    }
+
     $(document).ready(function() {
-        fetchWeatherData();
+        getGeoLocation();
 
         // Set interval untuk merefresh data setiap 15 menit (900000 ms)
         setInterval(fetchWeatherData, 900000); // 15 menit dalam milidetik
