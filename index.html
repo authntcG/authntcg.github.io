@@ -784,7 +784,7 @@
                 var weatstatus = document.getElementById('weather-name');
 
                 // Display value to HTML
-                $(temp).html(`<strong>${values.temperature_2m}</strong>, terasa seperti <strong>${values.apparent_temperature}</strong>`);
+                $(temp).html(`<strong>${values.temperature_2m}${units.temperature_2m}</strong>, terasa seperti <strong>${values.apparent_temperature}${units.apparent_temperature}</strong>`);
                 $(prediction).html(`<i class="bi bi-info"></i>${weatherMessage}`);
                 $(wind).html(`<i class="bi bi-wind"></i> Kecepatan angin ${values.wind_speed_10m} ke arah ${winddir}`);
                 $(icons).html(`<p class="${weatherdata.iconClass} text-center" style="font-size: 10vh; margin-bottom: -15px; font-weight: lighter !important;"></p>`);
