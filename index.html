@@ -460,7 +460,7 @@
                                 <div class="card-body">
                                     <div class="row">
                                         <div class="col-12 col-lg-4">
-                                            <label for="infoLocation">Current Location</label>
+                                            <h6><i class="bi bi-crosshair"></i> Current Location</h6>
                                         </div>
                                         <div class="col-12 col-lg-8">
                                             <p id="infoLocation" class="mb-0"></p>
@@ -474,7 +474,7 @@
                                 <div class="card-body">
                                     <div class="row">
                                         <div class="col-12 col-lg-4">
-                                            <label for="infoLatitude">Latitude</label>
+                                            <h6><i class="bi bi-arrows"></i> Latitude</h6>
                                         </div>
                                         <div class="col-12 col-lg-8">
                                             <p id="infoLatitude" class="mb-0"></p>
@@ -488,7 +488,7 @@
                                 <div class="card-body">
                                     <div class="row">
                                         <div class="col-12 col-lg-4">
-                                            <label for="infoLongitude">Longitude</label>
+                                            <h6 class="bi bi-arrows-vertical"> Longitude</h6>
                                         </div>
                                         <div class="col-12 col-lg-8">
                                             <p id="infoLongitude" class="mb-0"></p>
@@ -515,8 +515,36 @@
                             <div class="card">
                                 <div class="card-body">
                                     <div class="row">
-                                        <div class="col-12">
-                                            <label for="">TO BE FILLED</label>
+                                        <div class="col-12 mb-2">
+                                            <h6><i class="bi bi-calendar-day"></i> Daily</h6>
+                                        </div>
+
+                                        <div class="col-12 table-responsive">
+                                            <table id="hourly-forecast-table" class="table table-borderless">
+                                                <tr>
+                                                    <!-- Content -->
+                                                </tr>
+                                            </table>
+                                        </div>
+
+                                        <div class="col-12 mb-2">
+                                            <h6><i class="bi bi-calendar-week"></i> Weekly</h6>
+                                        </div>
+                                        
+                                        <div id="table" class="col-12">
+                                            <table id="daily-forecast-table" class="table table-borderless">
+                                                <thead>
+                                                    <tr>
+                                                        <th><i class="bi bi-calendar-date"></i></th>
+                                                        <th><i class="bi bi-cloud-sun-fill"></i></th>
+                                                        <th><i class="bi bi-thermometer-low"></i></th>
+                                                        <th><i class="bi bi-thermometer-high"></i></th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    <!-- Content -->
+                                                </tbody>
+                                            </table>
                                         </div>
                                     </div>
                                 </div>
@@ -675,6 +703,42 @@
         }
     };
 
+    // Visibility Sections
+    function convertVisibilityValue(visibility) {
+        return visibility / 100;
+    }
+
+    // UV Sections
+    function getUVIndexInfo(uv) {
+        let uvScale;
+        let recommendation;
+
+        if (uvIndex >= 0 && uvIndex <= 2) {
+            uvScale = "Rendah";
+            recommendation = "Paparan sinar UV minimal, Anda dapat berada di luar ruangan tanpa perlindungan tambahan, tetapi tetap gunakan kacamata hitam jika perlu.";
+        } else if (uvIndex >= 3 && uvIndex <= 5) {
+            uvScale = "Sedang";
+            recommendation = "Paparan sinar UV sedang. Gunakan tabir surya, kacamata hitam, dan perlindungan tambahan jika beraktivitas lama di luar ruangan.";
+        } else if (uvIndex >= 6 && uvIndex <= 7) {
+            uvScale = "Tinggi";
+            recommendation = "Paparan sinar UV tinggi. Gunakan perlindungan penuh seperti tabir surya, pakaian pelindung, dan topi. Hindari berada di luar ruangan pada tengah hari.";
+        } else if (uvIndex >= 8 && uvIndex <= 10) {
+            uvScale = "Sangat Tinggi";
+            recommendation = "Paparan sinar UV sangat tinggi. Gunakan perlindungan maksimum, hindari paparan langsung. Sebaiknya tetap berada di tempat teduh.";
+        } else if (uvIndex >= 11) {
+            uvScale = "Ekstrem";
+            recommendation = "Paparan sinar UV ekstrem. Sangat penting untuk menghindari paparan sinar matahari langsung. Gunakan perlindungan maksimal (tabir surya, pakaian pelindung, topi, dan kacamata hitam).";
+        } else {
+            uvScale = "Tidak valid";
+            recommendation = "Nilai UV tidak valid. Pastikan nilai UV yang dimasukkan benar.";
+        }
+
+        return {
+            uvScale: uvScale,
+            recommendation: recommendation
+        };
+    }
+
     // Weather sections 
     function getWindDirection(degree) {
         if ((degree >= 337.5 && degree <= 360) || (degree >= 0 && degree < 22.5)) {
@@ -775,12 +839,13 @@
 
     function fetchWeatherData(lat, lon) {
         $.ajax({
-            url: `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,apparent_temperature,precipitation,weather_code,surface_pressure,wind_speed_10m,wind_direction_10m&hourly=precipitation,weather_code&daily=precipitation_sum&forecast_days=1`,
+            url: `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,apparent_temperature,precipitation,weather_code,surface_pressure,wind_speed_10m,wind_direction_10m&hourly=temperature_2m,precipitation,weather_code,surface_pressure,visibility,wind_speed_10m,wind_direction_10m,uv_index&daily=weather_code,temperature_2m_max,temperature_2m_min,uv_index_max,precipitation_sum`,
             type: "GET",
             success: function (data) {
                 const values = data.current;
                 const units = data.current_units;
                 const hourly = data.hourly;
+                const daily = data.daily;
 
                 // Weather Prediction 
                 let rainStartHour = null;
@@ -789,6 +854,7 @@
                 let weatherMessage = "Cuaca tidak diketahui.";
 
                 const hours = hourly.time;
+                const days = daily.time;
                 const precipitations = hourly.precipitation;
                 const weatherCodes = hourly.weather_code;
 
@@ -831,6 +897,8 @@
                 var icons = document.getElementById('weather-icons');
                 var weatstatus = document.getElementById('weather-name');
                 var carousel = document.getElementById('carousel-content');
+                var tableHourly = $("#hourly-forecast-table tbody"); tableHourly.empty();
+                var tableDaily = $("#daily-forecast-table tbody"); tableDaily.empty();
 
                 // Display value to HTML
                 $(temp).html(
@@ -864,6 +932,54 @@
                         </div>
                     </div>
                 `);
+                hours.forEach((time, index) => {
+                    const weatherHourly = setWeatherData(hourly.weather_code[index]);
+                    const tempHourly = hourly.temperature_2m[index];
+                    const hour = new Date(time).toLocaleTimeString("id-ID", {hour: "2-digit", minute: "2-digit"});
+
+                    const row = `
+                        <td class="text-center">
+                            <div class="row">
+                                <div class="col-12 mb-0">
+                                    <small style="font-size: 2vh; font-weight: lighter;">${hour}</small>
+                                </div>
+                                <div class="col-12 mb-0">
+                                    <i class="${weatherHourly.iconClass}" style="font-size: 5vh;"></i>
+                                </div>
+                                <div class="col-12 mb-0">
+                                    <p>${tempHourly} ${units.temperature_2m}</p>
+                                </div>
+                            </div>
+                        </td>
+                    `;
+
+                    tableHourly.append(row);
+                });
+                days.forEach((day, index) => {
+                    const weatherDaily = setWeatherData(daily.weather_code[index]);
+                    const maxTempDaily = daily.temperature_2m_max[index];
+                    const minTempDaily = daily.temperature_2m_min[index];
+                    const day_ = new Date(day).toLocaleDateString("id-ID", {year: "numeric", month:"short", day:"2-digit"});
+
+                    const row = `
+                        <tr>
+                            <td>
+                                ${day_}
+                            </td>
+                            <td>
+                                <i class="${weatherDaily.iconClass}"></i> ${weatherDaily.message}
+                            </td>
+                            <td>
+                                ${minTempDaily} ${units.temperature_2m}
+                            </td>
+                            <td>
+                                ${maxTempDaily} ${units.temperature_2m}
+                            </td>
+                        </tr>
+                    `;
+
+                    tableDaily.append(row);
+                });
             },
             error: function (error) {
                 console.error("Error fetching weather data:", error);
