@@ -550,6 +550,21 @@
                                 </div>
                             </div>
                         </div>
+                        <div class="col-12 col-lg-6 mb-2">
+                            <div class="card">
+                                <div class="card-body">
+                                    <div class="row">
+                                        <div class="col-12">
+                                            <h6><i class="bi bi-card-text"></i> Summary</h6>
+                                        </div>
+                                        
+                                        <div class="col-12 mb-2" id="weather-summary">
+
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -709,7 +724,7 @@
     }
 
     // UV Sections
-    function getUVIndexInfo(uv) {
+    function getUVIndexInfo(uvIndex) {
         let uvScale;
         let recommendation;
 
@@ -739,6 +754,12 @@
         };
     }
 
+    // Days Sections 
+    function getDayName(dayIndex) {
+        const days = ['Hari ini', 'Besok', 'Lusa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
+        return days[dayIndex] || "Hari ke-" + (dayIndex + 1);
+    }
+
     // Weather sections 
     function getWindDirection(degree) {
         if ((degree >= 337.5 && degree <= 360) || (degree >= 0 && degree < 22.5)) {
@@ -763,6 +784,16 @@
     }
 
     function setWeatherData(weatherCode) {
+        // Message mappings
+        const advice = {
+            clear: 'Nikmati hari cerah, pakai tabir surya jika beraktivitas di luar ruangan.',
+            partlyCloudy: 'Bawa kacamata hitam dan topi, berawan sebagian.',
+            cloudy: 'Hari akan sangat berawan, bawa jaket jika Anda sensitif dengan angin.',
+            lightRain: 'Persiapkan payung atau jas hujan karena hujan ringan diperkirakan.',
+            moderateRain: 'Hujan sedang, kurangi aktivitas luar ruangan jika memungkinkan.',
+            thunderstorm: 'Badai petir ringan, hindari area terbuka jika memungkinkan.'
+        };
+
         // Map `weather_code` ke ikon Bootstrap Icons
         const weatherIcons = {
             0: 'bi-sun', // Cerah
@@ -830,10 +861,26 @@
         // Pilih ikon dan pesan sesuai `weatherCode`, default ke 'bi-question-circle' dan pesan umum jika tidak ada data
         const iconClass = weatherIcons[weatherCode] || 'bi-question-circle';
         const message = weatherMessages[weatherCode] || 'Data cuaca tidak tersedia.';
+        var adviceMessage = `<li>Tidak ada saran khusus.</li>`;
+
+        if ([0].includes(weatherCode)) {
+            adviceMessage = `<li>${advice.clear}</li>`;
+        } else if ([1, 2].includes(weatherCode)) {
+            adviceMessage = `<li>${advice.partlyCloudy}</li>`;
+        } else if ([3].includes(weatherCode)) {
+            adviceMessage = `<li>${advice.cloudy}</li>`;
+        } else if ([51, 61].includes(weatherCode)) {
+            adviceMessage = `<li>${advice.lightRain}</li>`;
+        } else if ([63, 80].includes(weatherCode)) {
+            adviceMessage = `<li>${advice.moderateRain}</li>`;
+        } else if ([95, 96].includes(weatherCode)) {
+            adviceMessage = `<li>${advice.thunderstorm}</li>`;
+        }
 
         return {
             iconClass,
-            message
+            message,
+            adviceMessage
         };
     }
 
@@ -842,6 +889,11 @@
             url: `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,apparent_temperature,precipitation,weather_code,surface_pressure,wind_speed_10m,wind_direction_10m&hourly=temperature_2m,precipitation,weather_code,surface_pressure,visibility,wind_speed_10m,wind_direction_10m,uv_index&daily=weather_code,temperature_2m_max,temperature_2m_min,uv_index_max,precipitation_sum`,
             type: "GET",
             success: function (data) {
+                // Get Current date & time
+                const today = new Date().toISOString().split('T')[0];
+                const currentHour = new Date().getHours();
+
+                // Fetch data from API
                 const values = data.current;
                 const units = data.current_units;
                 const hourly = data.hourly;
@@ -890,6 +942,27 @@
                 // Get weather icons
                 var weatherdata = setWeatherData(values.weather_code);
 
+                // Summary Sections 
+                const todaySummary = `
+                    Hari ini cuaca diperkirakan ${weatherdata.message}
+                    Suhu saat ini adalah ${values.temperature_2m}°C, terasa seperti ${values.apparent_temperature}°C.
+                    Kecepatan angin adalah ${values.wind_speed_10m} km/jam ke arah ${getWindDirection(values.wind_direction_10m)}.
+                    Indeks UV maksimum hari ini adalah ${daily.uv_index_max[0]} (${getUVIndexInfo(daily.uv_index_max[0]).uvScale})
+                `;
+
+                // Ringkasan cuaca untuk 7 hari ke depan
+                let weeklySummary = `<strong>Prakiraan cuaca 7 hari ke depan:</strong><br><ul>`;
+                daily.weather_code.forEach((code, index) => {
+                    const maxTemp = daily.temperature_2m_max[index];
+                    const minTemp = daily.temperature_2m_min[index];
+                    const uvIndex = daily.uv_index_max[index];
+                    weeklySummary += `
+                        <li>${getDayName(index)}: ${setWeatherData(code).message}, suhu berkisar antara ${minTemp}°C - ${maxTemp}°C. 
+                        Indeks UV maksimal: ${uvIndex}. ${getUVIndexInfo(uvIndex).recommendation}</li>
+                    `;
+                });
+                weeklySummary += `</ul>`;
+
                 // Get value section on html
                 var temp = document.getElementById('current-temp-data');
                 var prediction = document.getElementById('weather-precipitation');
@@ -899,6 +972,7 @@
                 var carousel = document.getElementById('carousel-content');
                 var tableHourly = $("#hourly-forecast-table tbody"); tableHourly.empty();
                 var tableDaily = $("#daily-forecast-table tbody"); tableDaily.empty();
+                var weatsummary = document.getElementById('weather-summary');
 
                 // Display value to HTML
                 $(temp).html(
@@ -933,46 +1007,56 @@
                     </div>
                 `);
                 hours.forEach((time, index) => {
+                    const date = new Date(time);
+                    const hour = date.getHours(); // Mendapatkan jam dari data
+                    const formattedHour = date.toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" });
                     const weatherHourly = setWeatherData(hourly.weather_code[index]);
                     const tempHourly = hourly.temperature_2m[index];
-                    const hour = new Date(time).toLocaleTimeString("id-ID", {hour: "2-digit", minute: "2-digit"});
 
-                    const row = `
-                        <td class="text-center">
-                            <div class="row">
-                                <div class="col-12 mb-0">
-                                    <small style="font-size: 2vh; font-weight: lighter;">${hour}</small>
-                                </div>
-                                <div class="col-12 mb-0">
-                                    <i class="${weatherHourly.iconClass}" style="font-size: 5vh;"></i>
-                                </div>
-                                <div class="col-12 mb-0">
-                                    <p>${tempHourly} ${units.temperature_2m}</p>
-                                </div>
-                            </div>
-                        </td>
-                    `;
+                    // Filter hanya untuk data hari ini
+                    if (date.toISOString().split('T')[0] === today) {
+                        // Menambahkan kelas background jika jam cocok dengan jam saat ini
+                        const highlightClass = (hour === currentHour) ? 'bg-warning' : ''; // Warna mencolok untuk jam saat ini
 
-                    tableHourly.append(row);
+                        const row = `
+                            <td class="text-center ${highlightClass}">
+                                <div class="row">
+                                    <div class="col-12 mb-0">
+                                        <small style="font-size: 2vh; font-weight: lighter;">${formattedHour}</small>
+                                    </div>
+                                    <div class="col-12 mb-0">
+                                        <i class="${weatherHourly.iconClass}" style="font-size: 5vh;"></i>
+                                    </div>
+                                    <div class="col-12 mb-0">
+                                        <p class="m-0 p-0">${tempHourly}</p>
+                                        <p>${units.temperature_2m}</p>
+                                    </div>
+                                </div>
+                            </td>
+                        `;
+
+                        tableHourly.append(row);
+                    }
                 });
                 days.forEach((day, index) => {
                     const weatherDaily = setWeatherData(daily.weather_code[index]);
                     const maxTempDaily = daily.temperature_2m_max[index];
                     const minTempDaily = daily.temperature_2m_min[index];
                     const day_ = new Date(day).toLocaleDateString("id-ID", {year: "numeric", month:"short", day:"2-digit"});
+                    const highlightClass = (today === day) ? 'bg-primary' : '';
 
                     const row = `
                         <tr>
-                            <td>
+                            <td class="${highlightClass}">
                                 ${day_}
                             </td>
-                            <td>
+                            <td class="${highlightClass}">
                                 <i class="${weatherDaily.iconClass}"></i> ${weatherDaily.message}
                             </td>
-                            <td>
+                            <td class="${highlightClass}">
                                 ${minTempDaily} ${units.temperature_2m}
                             </td>
-                            <td>
+                            <td class="${highlightClass}">
                                 ${maxTempDaily} ${units.temperature_2m}
                             </td>
                         </tr>
@@ -980,6 +1064,14 @@
 
                     tableDaily.append(row);
                 });
+                $(weatsummary).html(`
+                    <h6>Cuaca Hari Ini</h6>
+                    <p>${todaySummary}</p>
+                    <h6>Saran Untuk Hari Ini</h6>
+                    <p>${weatherdata.adviceMessage}</p>
+                    <h6>Cuaca 7 Hari Mendatang</h6>
+                    <p>${weeklySummary}</p>
+                `);
             },
             error: function (error) {
                 console.error("Error fetching weather data:", error);
