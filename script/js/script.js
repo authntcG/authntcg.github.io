@@ -175,7 +175,7 @@ function setWeatherData(weatherCode) {
     return {
         iconClass: icon,
         message,
-        adviceMessage: `<li>${advice}</li>`
+        adviceMessage: `<ul><li>${advice}</li></ul>`
     };
 }
 
@@ -212,7 +212,7 @@ function fetchWeatherData(lat, lon) {
                 Indeks UV maksimum hari ini ${daily.uv_index_max[0]} (${getUVIndexInfo(daily.uv_index_max[0]).uvScale}).
             `;
 
-            const weeklySummary = `<strong>Prakiraan cuaca 7 hari ke depan:</strong><br><ul>` +
+            const weeklySummary = `<ul>` +
                 daily.weather_code.map((code, index) => `
                     <li>${getDayName(index)}: ${setWeatherData(code).message}, suhu ${daily.temperature_2m_min[index]}°C - ${daily.temperature_2m_max[index]}°C. 
                     Indeks UV maksimal: ${daily.uv_index_max[index]}. ${getUVIndexInfo(daily.uv_index_max[index]).recommendation}</li>
