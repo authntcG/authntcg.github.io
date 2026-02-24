@@ -1,305 +1,399 @@
-let model = null;
-let modelPromise = null;
+/**
+ * ==========================================
+ * CONFIGURATION & UTILS
+ * ==========================================
+ */
+const CONFIG = {
+    DETECTION: {
+        COLORS: [
+            '#00FFFF', '#FF00FF', '#FFFF00', '#00FF00', '#FF0000', '#0000FF',
+            '#FFA500', '#00CED1', '#ADFF2F', '#FF69B4', '#FFD700', '#7B68EE'
+        ],
+        FONT: '16px "Segoe UI", Arial, sans-serif',
+        CONFIDENCE: 0.5
+    },
+    BG: {
+        URL: 'https://picsum.photos/1920/1080',
+    }
+};
 
-// Load model hanya sekali
-async function loadModel() {
-  if (!modelPromise) modelPromise = cocoSsd.load().then(m => (model = m));
-  return modelPromise;
-}
+const Utils = {
+    // Helper untuk load gambar
+    loadImage: (url) => {
+        return new Promise((resolve, reject) => {
+            const img = new Image();
+            img.crossOrigin = "Anonymous";
+            img.src = url;
+            // decode() memastikan gambar siap render
+            img.decode().then(() => resolve(img)).catch((err) => reject(err));
+        });
+    },
 
-// Warna bounding box berbeda
-function getColor(idx) {
-  const colors = [
-    '#00FFFF', '#FF00FF', '#FFFF00', '#00FF00', '#FF0000', '#0000FF',
-    '#FFA500', '#00CED1', '#ADFF2F', '#FF69B4', '#FFD700', '#7B68EE'
-  ];
-  return colors[idx % colors.length];
-}
+    calculateBrightness: (imgElement) => {
+        const canvas = document.createElement('canvas');
+        canvas.width = 1;
+        canvas.height = 1;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(imgElement, 0, 0, 1, 1);
+        const [r, g, b] = ctx.getImageData(0, 0, 1, 1).data;
+        return (0.299 * r) + (0.587 * g) + (0.114 * b);
+    }
+};
 
-// --- Live Detection ---
-const video = document.getElementById('webcam');
-const canvas = document.getElementById('canvas');
-const ctx = canvas.getContext('2d');
-const logArea = document.getElementById('log-area');
-let animationId = null;
-let stream = null;
+/**
+ * ==========================================
+ * MODULE: PRELOADER (User Implementation)
+ * ==========================================
+ */
+const Preloader = {
+    init() {
+        const bar = document.getElementById('loading-bar');
+        const preload = document.getElementById('preload');
+        
+        // Pastikan elemen ada sebelum dijalankan
+        if (!bar || !preload) return;
 
-function resizeCanvas() {
-  canvas.width = video.videoWidth;
-  canvas.height = video.videoHeight;
-  canvas.style.width = video.offsetWidth + 'px';
-  canvas.style.height = video.offsetHeight + 'px';
-}
+        let progress = 0;
 
-async function setupCamera() {
-  stream = await navigator.mediaDevices.getUserMedia({ video: true });
-  video.srcObject = stream;
-  return new Promise(resolve => {
-    video.onloadedmetadata = () => {
-      video.play();
-      resizeCanvas();
-      resolve();
-    };
-  });
-}
+        // 1. Interval Fake Progress (Maju sampai 90%)
+        const interval = setInterval(() => {
+            if (progress < 90) {
+                bar.value = ++progress;
+            } else {
+                clearInterval(interval);
+            }
+        }, 15);
 
-function stopCamera() {
-  if (stream) {
-    stream.getTracks().forEach(track => track.stop());
-    stream = null;
-  }
-  video.srcObject = null;
-}
+        // 2. Window Load Event (Tunggu SEMUA selesai baru 100%)
+        window.addEventListener('load', () => {
+            clearInterval(interval);
+            bar.value = 100;
+            
+            // Delay sedikit untuk efek smooth
+            setTimeout(() => {
+                preload.classList.add('preload-hidden');
+                
+                // Hapus dari display flow setelah transisi selesai
+                setTimeout(() => {
+                    preload.style.display = 'none';
+                }, 500); // Sesuai durasi CSS transition 0.5s
+            }, 300);
+        });
+    }
+};
 
-function stopDetection() {
-  if (animationId) cancelAnimationFrame(animationId);
-  animationId = null;
-  stopCamera();
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-  logArea.value = '';
-}
+/**
+ * ==========================================
+ * MODULE: THEME SERVICE
+ * ==========================================
+ */
+const ThemeService = {
+    init() {
+        this.initSystemTheme();
+        this.initDynamicBackground();
+    },
 
-async function runDetection() {
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-  await loadModel();
-  const predictions = await model.detect(video);
+    initSystemTheme() {
+        const updateTheme = () => {
+            const isDarkMode = window.matchMedia("(prefers-color-scheme: dark)").matches;
+            const theme = isDarkMode ? "dark" : "light";
+            document.documentElement.setAttribute("data-bs-theme", theme);
+        };
+        updateTheme();
+        window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", updateTheme);
+    },
 
-  logArea.value = predictions.length
-    ? predictions.map(pred => `${pred.class} (${(pred.score * 100).toFixed(1)}%)`).join('\n')
-    : 'No objects detected.';
+    async initDynamicBackground() {
+        try {
+            const img = await Utils.loadImage(CONFIG.BG.URL);
+            
+            document.body.style.backgroundImage = `url('${CONFIG.BG.URL}')`;
+            document.body.style.backgroundSize = 'cover';
+            document.body.style.backgroundPosition = 'center';
+            document.body.style.backgroundAttachment = 'fixed';
 
-  predictions.forEach((pred, idx) => {
-    ctx.beginPath();
-    ctx.rect(...pred.bbox);
-    ctx.lineWidth = 2;
-    ctx.strokeStyle = ctx.fillStyle = getColor(idx);
-    ctx.stroke();
-    ctx.font = '16px Arial';
-    ctx.fillText(
-      `${pred.class} (${(pred.score * 100).toFixed(1)}%)`,
-      pred.bbox[0],
-      pred.bbox[1] > 20 ? pred.bbox[1] - 5 : 10
-    );
-  });
+            const brightness = Utils.calculateBrightness(img);
+            document.body.style.color = brightness > 128 ? '#000000' : '#ffffff';
+        } catch (error) {
+            console.warn("Background load failed.", error);
+        }
+    }
+};
 
-  animationId = requestAnimationFrame(runDetection);
-}
+/**
+ * ==========================================
+ * MODULE: AI MODEL SERVICE
+ * ==========================================
+ */
+const ModelService = {
+    model: null,
+    
+    async load() {
+        if (!this.model) {
+            // Load model di background tanpa menahan UI
+            this.model = await cocoSsd.load();
+        }
+        return this.model;
+    },
 
-async function startLiveDetection() {
-  await setupCamera();
-  await loadModel();
-  runDetection();
-}
+    async detect(source) {
+        if (!this.model) await this.load();
+        return await this.model.detect(source);
+    }
+};
 
-// --- Video Detection ---
-const uploadedVideo = document.getElementById('uploaded-video');
-const videoCanvas = document.getElementById('video-canvas');
-const videoCtx = videoCanvas.getContext('2d');
-const videoLogArea = document.getElementById('video-log-area');
-const videoUploadContainer = document.getElementById('video-upload-container');
-let videoDetectionId = null;
+/**
+ * ==========================================
+ * MODULE: RENDERER
+ * ==========================================
+ */
+const Renderer = {
+    getColor(index) { return CONFIG.DETECTION.COLORS[index % CONFIG.DETECTION.COLORS.length]; },
 
-function resizeVideoCanvas() {
-  // Ambil ukuran tampilan video
-  const rect = uploadedVideo.getBoundingClientRect();
-  videoCanvas.width = rect.width;
-  videoCanvas.height = rect.height;
-  videoCanvas.style.width = rect.width + 'px';
-  videoCanvas.style.height = rect.height + 'px';
-  videoCanvas.style.left = uploadedVideo.offsetLeft + 'px';
-  videoCanvas.style.top = uploadedVideo.offsetTop + 'px';
-}
+    clear(canvas) {
+        const ctx = canvas.getContext('2d');
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+    },
 
-function stopVideoDetection() {
-  if (videoDetectionId) cancelAnimationFrame(videoDetectionId);
-  videoDetectionId = null;
-  videoCtx.clearRect(0, 0, videoCanvas.width, videoCanvas.height);
-  videoLogArea.value = '';
-}
+    resizeCanvasToMedia(canvas, media) {
+        if (media.clientWidth && media.clientHeight) {
+            canvas.width = media.clientWidth;
+            canvas.height = media.clientHeight;
+        }
+    },
 
-async function runVideoDetection() {
-  if (!uploadedVideo.paused && !uploadedVideo.ended) {
-    videoCtx.clearRect(0, 0, videoCanvas.width, videoCanvas.height);
-    await loadModel();
-    const predictions = await model.detect(uploadedVideo);
+    drawPredictions(canvas, predictions, logElement, media) {
+        const ctx = canvas.getContext('2d');
+        this.clear(canvas);
 
-    videoLogArea.value = predictions.length
-      ? predictions.map(pred => `${pred.class} (${(pred.score * 100).toFixed(1)}%)`).join('\n')
-      : 'No objects detected.';
+        if (logElement) {
+            logElement.value = predictions.length > 0
+                ? predictions.map(p => `${p.class} (${Math.round(p.score * 100)}%)`).join('\n')
+                : 'No objects detected.';
+        }
 
-    // Scaling bbox
-    const rect = uploadedVideo.getBoundingClientRect();
-    const scaleX = rect.width / uploadedVideo.videoWidth;
-    const scaleY = rect.height / uploadedVideo.videoHeight;
+        let scaleX = 1, scaleY = 1;
+        if (media instanceof HTMLVideoElement) {
+            scaleX = canvas.width / media.videoWidth;
+            scaleY = canvas.height / media.videoHeight;
+        } else if (media instanceof HTMLImageElement) {
+            scaleX = canvas.width / media.naturalWidth;
+            scaleY = canvas.height / media.naturalHeight;
+        }
 
-    predictions.forEach((pred, idx) => {
-      const [x, y, w, h] = pred.bbox;
-      const sx = x * scaleX, sy = y * scaleY, sw = w * scaleX, sh = h * scaleY;
-      videoCtx.beginPath();
-      videoCtx.rect(sx, sy, sw, sh);
-      videoCtx.lineWidth = 2;
-      videoCtx.strokeStyle = videoCtx.fillStyle = getColor(idx);
-      videoCtx.stroke();
-      videoCtx.font = '16px Arial';
-      videoCtx.fillText(
-        `${pred.class} (${(pred.score * 100).toFixed(1)}%)`,
-        sx, sy > 20 ? sy - 5 : 10
-      );
-    });
-  }
-  videoDetectionId = requestAnimationFrame(runVideoDetection);
-}
+        predictions.forEach((pred, idx) => {
+            const [x, y, w, h] = pred.bbox;
+            const color = this.getColor(idx);
+            const sx = x * scaleX, sy = y * scaleY, sw = w * scaleX, sh = h * scaleY;
 
-document.getElementById('video-upload').addEventListener('change', function (e) {
-  stopVideoDetection();
-  const file = e.target.files[0];
-  if (!file) {
-    videoUploadContainer.style.display = 'none';
-    return;
-  }
-  uploadedVideo.src = URL.createObjectURL(file);
-  uploadedVideo.muted = true;
-  uploadedVideo.loop = true;
-  videoUploadContainer.style.display = 'flex';
+            ctx.beginPath();
+            ctx.rect(sx, sy, sw, sh);
+            ctx.lineWidth = 3;
+            ctx.strokeStyle = color;
+            ctx.stroke();
 
-  uploadedVideo.onloadedmetadata = async function () {
-    resizeVideoCanvas();
-    await loadModel();
-    uploadedVideo.currentTime = 0;
-    uploadedVideo.play();
-  };
-  uploadedVideo.onplay = function () {
-    resizeVideoCanvas();
-    runVideoDetection();
-  };
-  uploadedVideo.onpause = stopVideoDetection;
-  uploadedVideo.onended = function () {
-    uploadedVideo.currentTime = 0;
-    uploadedVideo.play();
-  };
-});
+            const text = `${pred.class} ${Math.round(pred.score * 100)}%`;
+            ctx.font = CONFIG.DETECTION.FONT;
+            ctx.fillStyle = color;
+            const textWidth = ctx.measureText(text).width;
+            ctx.fillRect(sx, sy > 20 ? sy - 20 : 0, textWidth + 10, 20);
+            
+            ctx.fillStyle = '#000000';
+            ctx.fillText(text, sx + 5, sy > 20 ? sy - 5 : 15);
+        });
+    }
+};
 
-// --- Image Detection ---
-const uploadedImage = document.getElementById('uploaded-image');
-const imageCanvas = document.getElementById('image-canvas');
-const imageCtx = imageCanvas.getContext('2d');
-const imageLogArea = document.getElementById('image-log-area');
-const imageUploadContainer = document.getElementById('image-upload-container');
+/**
+ * ==========================================
+ * MODULE: CAMERA SERVICE
+ * ==========================================
+ */
+const CameraService = {
+    stream: null,
+    videoElement: null,
+    facingMode: 'user', 
 
-function resizeImageCanvas() {
-  if (uploadedImage && imageCanvas) {
-    // Ambil ukuran tampilan gambar
-    const rect = uploadedImage.getBoundingClientRect();
-    imageCanvas.width = rect.width;
-    imageCanvas.height = rect.height;
-    imageCanvas.style.width = rect.width + 'px';
-    imageCanvas.style.height = rect.height + 'px';
-    imageCanvas.style.left = uploadedImage.offsetLeft + 'px';
-    imageCanvas.style.top = uploadedImage.offsetTop + 'px';
-  }
-}
+    init(videoElement) {
+        this.videoElement = videoElement;
+    },
 
-function clearImageDetection(keepImage = true) {
-  imageCtx.clearRect(0, 0, imageCanvas.width, imageCanvas.height);
-  imageLogArea.value = '';
-  if (!keepImage) {
-    imageUploadContainer.style.display = 'none';
-    uploadedImage.src = '';
-    uploadedImage.removeAttribute('src');
-  }
-}
+    async start() {
+        if (this.stream) this.stop();
+        try {
+            this.stream = await navigator.mediaDevices.getUserMedia({
+                audio: false,
+                video: { facingMode: this.facingMode }
+            });
+            this.videoElement.srcObject = this.stream;
+            return new Promise((resolve) => {
+                this.videoElement.onloadedmetadata = () => {
+                    this.videoElement.play();
+                    resolve(true);
+                };
+            });
+        } catch (error) {
+            console.error("Camera Error:", error);
+            return false;
+        }
+    },
 
-async function detectImage() {
-  if (!uploadedImage || !uploadedImage.src) return;
-  if (uploadedImage.naturalWidth === 0 || uploadedImage.naturalHeight === 0) return;
-  resizeImageCanvas();
-  await loadModel();
-  imageCtx.clearRect(0, 0, imageCanvas.width, imageCanvas.height);
+    stop() {
+        if (this.stream) {
+            this.stream.getTracks().forEach(t => t.stop());
+            this.stream = null;
+        }
+    },
 
-  const predictions = await model.detect(uploadedImage);
+    async switchCamera() {
+        this.facingMode = this.facingMode === 'user' ? 'environment' : 'user';
+        await this.start();
+    }
+};
 
-  imageLogArea.value = predictions.length
-    ? predictions.map(pred => `${pred.class} (${(pred.score * 100).toFixed(1)}%)`).join('\n')
-    : 'No objects detected.';
+/**
+ * ==========================================
+ * MAIN APP CONTROLLER
+ * ==========================================
+ */
+const App = {
+    state: { mode: 'live', isLooping: false, animationId: null },
+    
+    elements: {
+        live: {
+            video: document.getElementById('webcam'),
+            canvas: document.getElementById('canvas-live'),
+            log: document.getElementById('log-live'),
+            btnSwitch: document.getElementById('btn-switch-cam')
+        },
+        video: {
+            input: document.getElementById('input-video'),
+            container: document.getElementById('video-container-file'),
+            media: document.getElementById('video-file'),
+            canvas: document.getElementById('canvas-video'),
+            log: document.getElementById('log-video')
+        },
+        image: {
+            input: document.getElementById('input-image'),
+            container: document.getElementById('image-container-file'),
+            media: document.getElementById('image-file'),
+            canvas: document.getElementById('canvas-image'),
+            log: document.getElementById('log-image')
+        }
+    },
 
-  // Scaling bbox
-  const rect = uploadedImage.getBoundingClientRect();
-  const scaleX = rect.width / uploadedImage.naturalWidth;
-  const scaleY = rect.height / uploadedImage.naturalHeight;
+    init() {
+        // 1. Jalankan Preloader (Segera)
+        Preloader.init();
 
-  predictions.forEach((pred, idx) => {
-    let [x, y, w, h] = pred.bbox;
-    let sx = x * scaleX, sy = y * scaleY, sw = w * scaleX, sh = h * scaleY;
+        // 2. Init Module Lain (Async, tidak memblokir UI loader)
+        ThemeService.init(); 
+        CameraService.init(this.elements.live.video);
+        
+        // 3. Setup Events
+        this.setupTabs();
+        this.setupLiveEvents();
+        this.setupFileEvents();
+        window.addEventListener('resize', () => this.handleResize());
 
-    // Clamp bounding box to stay inside the canvas
-    if (sx < 0) { sw += sx; sx = 0; }
-    if (sy < 0) { sh += sy; sy = 0; }
-    if (sx + sw > imageCanvas.width) sw = imageCanvas.width - sx;
-    if (sy + sh > imageCanvas.height) sh = imageCanvas.height - sy;
-    if (sw <= 0 || sh <= 0) return; // Skip invalid box
+        // 4. Start Camera (Di background)
+        this.startLiveMode();
 
-    imageCtx.beginPath();
-    imageCtx.rect(sx, sy, sw, sh);
-    imageCtx.lineWidth = 2;
-    imageCtx.strokeStyle = imageCtx.fillStyle = getColor(idx);
-    imageCtx.stroke();
-    imageCtx.font = '16px Arial';
-    imageCtx.fillText(
-      `${pred.class} (${(pred.score * 100).toFixed(1)}%)`,
-      sx, sy > 20 ? sy - 5 : 10
-    );
-  });
-}
+        // Note: Preloader.hide() akan dipanggil otomatis oleh 
+        // window.addEventListener('load') di dalam Preloader module
+    },
 
-document.getElementById('image-upload').addEventListener('change', function (e) {
-  clearImageDetection(false);
-  const file = e.target.files[0];
-  if (!file) {
-    imageUploadContainer.style.display = 'none';
-    return;
-  }
-  uploadedImage.onload = detectImage;
-  uploadedImage.src = URL.createObjectURL(file);
-  imageUploadContainer.style.display = 'flex';
-});
+    stopAll() {
+        this.state.isLooping = false;
+        if (this.state.animationId) cancelAnimationFrame(this.state.animationId);
+        CameraService.stop();
+        this.elements.video.media.pause();
+        Renderer.clear(this.elements.live.canvas);
+        Renderer.clear(this.elements.video.canvas);
+        Renderer.clear(this.elements.image.canvas);
+    },
 
-// --- Tab Switching ---
+    async startLiveMode() {
+        this.state.mode = 'live';
+        const started = await CameraService.start();
+        if(started) {
+            this.loopDetection(this.elements.live.video, this.elements.live.canvas, this.elements.live.log);
+        }
+    },
+
+    async loopDetection(media, canvas, log) {
+        this.state.isLooping = true;
+        const loop = async () => {
+            if (!this.state.isLooping) return;
+            
+            if (media.readyState === 4 || media.complete) {
+                Renderer.resizeCanvasToMedia(canvas, media);
+                const predictions = await ModelService.detect(media);
+                Renderer.drawPredictions(canvas, predictions, log, media);
+            }
+            this.state.animationId = requestAnimationFrame(loop);
+        };
+        loop();
+    },
+
+    setupTabs() {
+        document.querySelectorAll('button[data-bs-toggle="tab"]').forEach(btn => {
+            btn.addEventListener('shown.bs.tab', (e) => {
+                this.stopAll();
+                const mode = e.target.getAttribute('data-mode');
+                if (mode === 'live') this.startLiveMode();
+                else this.state.mode = mode;
+            });
+        });
+    },
+
+    setupLiveEvents() {
+        if(this.elements.live.btnSwitch) {
+            this.elements.live.btnSwitch.addEventListener('click', () => CameraService.switchCamera());
+        }
+    },
+
+    setupFileEvents() {
+        // Video
+        this.elements.video.input.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                this.elements.video.container.style.display = 'flex';
+                this.elements.video.media.src = URL.createObjectURL(file);
+                this.elements.video.media.onplay = () => {
+                    this.loopDetection(this.elements.video.media, this.elements.video.canvas, this.elements.video.log);
+                };
+                this.elements.video.media.onpause = () => { this.state.isLooping = false; };
+            }
+        });
+
+        // Image
+        this.elements.image.input.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                this.elements.image.container.style.display = 'flex';
+                const img = this.elements.image.media;
+                img.onload = async () => {
+                    Renderer.resizeCanvasToMedia(this.elements.image.canvas, img);
+                    const preds = await ModelService.detect(img);
+                    Renderer.drawPredictions(this.elements.image.canvas, preds, this.elements.image.log, img);
+                };
+                img.src = URL.createObjectURL(file);
+            }
+        });
+    },
+
+    handleResize() {
+        if (this.state.mode === 'image' && this.elements.image.media.src) {
+            const img = this.elements.image.media;
+            Renderer.resizeCanvasToMedia(this.elements.image.canvas, img);
+            ModelService.detect(img).then(p => 
+                Renderer.drawPredictions(this.elements.image.canvas, p, this.elements.image.log, img)
+            );
+        }
+    }
+};
+
 document.addEventListener('DOMContentLoaded', () => {
-  if (document.getElementById('live')?.classList.contains('active')) startLiveDetection();
-
-  document.querySelectorAll('button[data-bs-toggle="tab"]').forEach(btn => {
-    btn.addEventListener('shown.bs.tab', function (e) {
-      const target = e.target.getAttribute('data-bs-target');
-      if (target === '#live') {
-        startLiveDetection();
-        stopVideoDetection();
-        clearImageDetection(true);
-      } else if (target === '#video') {
-        stopDetection();
-        clearImageDetection(true);
-        if (uploadedVideo && uploadedVideo.src) {
-          videoUploadContainer.style.display = 'flex';
-          uploadedVideo.play();
-          runVideoDetection();
-        }
-      } else if (target === '#image') {
-        stopDetection();
-        stopVideoDetection();
-        if (uploadedImage && uploadedImage.src) {
-          imageUploadContainer.style.display = 'flex';
-          detectImage();
-        }
-      }
-    });
-  });
-});
-
-// --- Responsive Resize ---
-window.addEventListener('resize', () => {
-  resizeCanvas();
-  resizeVideoCanvas();
-  resizeImageCanvas();
-  if (document.querySelector('.nav-link.active')?.getAttribute('data-bs-target') === '#image') {
-    detectImage();
-  }
+    App.init();
 });

@@ -1,39 +1,164 @@
-#video-container {
+/* --- Preloader Animation --- */
+.preload-page {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: #ffffff; /* Default background sebelum gambar load */
+    z-index: 9999;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    transition: opacity 0.5s ease-out;
+}
+
+[data-bs-theme="dark"] .preload-page {
+    background: #212529;
+}
+
+/* --- Frosted Glass Effect (Glassmorphism) --- */
+/* Kita override background card Bootstrap agar transparan */
+.card {
+    backdrop-filter: blur(15px);
+    -webkit-backdrop-filter: blur(15px); /* Support Safari */
+    box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* Warna Kaca untuk Light Mode */
+[data-bs-theme="light"] .card {
+    background-color: rgba(255, 255, 255, 0.65) !important; /* Putih Transparan */
+    color: #000;
+}
+
+/* Warna Kaca untuk Dark Mode */
+[data-bs-theme="dark"] .card {
+    background-color: rgba(0, 0, 0, 0.60) !important; /* Hitam Transparan */
+    color: #fff;
+}
+
+/* Pastikan input/textarea juga sedikit transparan agar menyatu */
+.form-control, .form-select {
+    background-color: rgba(255, 255, 255, 0.9);
+}
+[data-bs-theme="dark"] .form-control, 
+[data-bs-theme="dark"] .form-select {
+    background-color: rgba(0, 0, 0, 0.5);
+    color: white;
+    border-color: rgba(255,255,255,0.2);
+}
+
+/* Container Layout */
+.media-container {
   position: relative;
-  display: inline-block;
-}
-#webcam {
-  display: block;
   width: 100%;
-  height: auto;
-}
-#canvas {
-  position: absolute;
-  top: 0;
-  left: 0;
-  pointer-events: none;
-  z-index: 10;
-}
-#video-upload {
-  width: 100%;
-}
-#video-upload-container {
-  position: relative;
+  max-width: 640px;
+  /* Batas lebar agar tidak terlalu besar */
+  margin: 0 auto;
+  background-color: #000;
+  border-radius: 8px;
+  overflow: hidden;
   display: flex;
   justify-content: center;
   align-items: center;
   min-height: 300px;
 }
-#uploaded-video {
-  max-height: 500px;
-  width: auto;
+
+/* Media Elements (Video/Img/Canvas) */
+.media-container video,
+.media-container img {
+  width: 100%;
+  height: auto;
   display: block;
-  margin: auto;
 }
-#video-canvas {
+
+.media-container canvas {
   position: absolute;
   top: 0;
   left: 0;
+  width: 100%;
+  height: 100%;
   pointer-events: none;
-  z-index: 10;
+  /* Agar klik tembus ke video controls */
+}
+
+/* Log Area */
+.log-area {
+  resize: vertical;
+  font-family: monospace;
+  font-size: 0.9rem;
+}
+
+/* Switch Camera Button */
+#btn-switch-cam {
+  position: absolute;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 20;
+  border-radius: 50px;
+  padding: 8px 16px;
+  opacity: 0.7;
+  transition: all 0.3s ease;
+  border: none;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 600;
+}
+
+#btn-switch-cam:hover {
+  opacity: 1;
+  background-color: #fff;
+  transform: translateX(-50%) scale(1.05);
+}
+
+
+/* Component: Preloader */
+.preload-page {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: var(--bg-overlay);
+    backdrop-filter: blur(10px);
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: opacity 0.3s ease;
+}
+
+.preload-hidden {
+    opacity: 0;
+    pointer-events: none;
+}
+
+/* Component: Progress Bar */
+progress {
+    width: 200px;
+    height: 20px;
+    appearance: none;
+    border: none;
+    border-radius: 15px;
+}
+
+progress::-webkit-progress-bar {
+    background: var(--progress-bg);
+    border-radius: 15px;
+}
+
+progress::-webkit-progress-value {
+    background: var(--progress-val);
+    transition: width 0.3s ease;
+    border-radius: 15px;
+}
+
+/* Dark mode support */
+[data-bs-theme="dark"] .preload-page {
+    background: #212529;
 }
