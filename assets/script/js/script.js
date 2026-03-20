@@ -14,7 +14,14 @@ const WindowManager = {
         }
     },
 
-    // Fungsi Utama Pembuka Jendela
+    /**
+     * Fungsi Utama: Membuka jendela baru dengan berbagai kemungkinan (Possibility Handling)
+     * @param {Object} options - Konfigurasi jendela
+     * @param {string} options.id - ID unik jendela (mencegah duplikasi buka tutup)
+     * @param {string} options.title - Judul di header jendela
+     * @param {string} options.url - (Opsional) URL untuk mode Iframe (PDF, Web, Blob)
+     * @param {string} options.htmlContent - (Opsional) Teks HTML untuk mode Snippet (Gambar, Video, UI)
+     */
     openWindow(options) {
         const { id, title, url, htmlContent, width, height, x, y } = options;
 
@@ -99,9 +106,9 @@ const WindowManager = {
         }
 
         try {
-            // 1. Ambil isi file about-window.html
-            // Sesuaikan path ini dengan letak file about-window.html yang kamu buat
-            const response = await fetch('about-window.html'); 
+            // 1. Ambil isi file about.html
+            // Sesuaikan path ini dengan letak file about.html yang kamu buat
+            const response = await fetch('about.html'); 
             
             if (!response.ok) throw new Error('Gagal memuat file HTML');
             
@@ -129,45 +136,13 @@ const WindowManager = {
         }
     },
 
-    async openSettings() {
-        // Cek dulu apakah jendela sudah ada untuk mencegah fetch berulang
-        let win = document.getElementById('win-settings');
-        if (win) {
-            win.style.display = 'block';
-            win.style.zIndex = Math.floor(Date.now() / 1000);
-            this.updateTaskbar();
-            return;
-        }
-
-        try {
-            // 1. Ambil isi file settings.html
-            // Sesuaikan path ini dengan letak file settings.html yang kamu buat
-            const response = await fetch('sample.html'); 
-            
-            if (!response.ok) throw new Error('Gagal memuat file HTML');
-            
-            // 2. Ubah respon menjadi teks HTML
-            const htmlText = await response.text(); 
-
-            // 3. Buka jendela dengan teks HTML yang baru saja diambil
-            this.openWindow({
-                id: 'win-settings',
-                title: 'System Settings',
-                width: '400px',
-                height: '500px',
-                htmlContent: htmlText 
-            });
-
-        } catch (error) {
-            console.error("Window Load Error:", error);
-            // Fallback sederhana jika file gagal dimuat
-            this.openWindow({
-                id: 'win-settings-error',
-                title: 'Error',
-                width: '300px', height: '200px',
-                htmlContent: `<div class="p-4 text-danger">Gagal memuat pengaturan.</div>`
-            });
-        }
+    openPDF() {
+        this.openWindow({
+            id: 'win-cv',
+            title: 'CV Galih Respati',
+            url: 'https://drive.google.com/file/d/1kvOwc1pDQl5EyGQh9Kmcjpa-XwGpEkeJ/preview',
+            width: '800px', height: '600px'
+        });
     },
 
     updateTaskbar() {
@@ -289,14 +264,14 @@ const UIManager = {
     setupEventListeners() {
         const infoModal = document.getElementById('infoModal');
         const btnAbout = document.getElementById('btnAboutWindow');
-        const btnSettings = document.getElementById('btnSettingsWindow');
+        const btnCV = document.getElementById('btnCVWindow');
+
+        if (btnCV) {
+            btnCV.addEventListener('click', () => WindowManager.openPDF());
+        }
         
         if (btnAbout) {
             btnAbout.addEventListener('click', () => WindowManager.openAbout());
-        }
-
-        if (btnSettings) {
-            btnSettings.addEventListener('click', () => WindowManager.openSettings());
         }
 
         if (infoModal) {

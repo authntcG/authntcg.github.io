@@ -219,6 +219,16 @@ class AppMap extends HTMLElement {
     }
 }
 
+/**
+ * Komponen: AppWindow (Custom Web Component)
+ * Deskripsi: Sistem jendela mengambang bergaya OS (Windows-like) dengan dukungan efek Glassmorphism.
+ * * Capability (Kemampuan Handling):
+ * 1. Rendering Konten: Mendukung Iframe (URL Eksternal, PDF, Blob) dan HTML Snippet (Gambar, Video, UI Custom).
+ * 2. Window Controls: Close, Maximize (Full Screen), Minimize (Hide ke Taskbar).
+ * 3. Dragging: Dapat digeser melalui area Header.
+ * 4. Resizing: Dapat diubah ukurannya dari 8 arah (Atas, Bawah, Kiri, Kanan, dan 4 Sudut).
+ * 5. Z-Index Management: Otomatis maju ke depan saat diklik/digeser.
+ */
 class AppWindow extends HTMLElement {
     constructor() {
         super();

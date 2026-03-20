@@ -179,9 +179,87 @@ progress::-webkit-progress-value {
 
 
 /* Enhancement app-window */
+/* =========================================
+   APP WINDOW (FROSTED GLASS EFFECT)
+   ========================================= */
+
+/* 1. Base Styling Jendela Utama */
+.app-window {
+    /* Efek Blur (Mica) */
+    backdrop-filter: blur(15px);
+    -webkit-backdrop-filter: blur(15px);
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+    border-radius: 12px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    /* Animasi transisi saat ganti tema */
+    transition: background-color 0.3s ease, border-color 0.3s ease;
+}
+
+/* 2. Base Styling Header */
+.app-window-header {
+    cursor: grab;
+    user-select: none;
+    transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease;
+}
+
+.app-window-header:active {
+    cursor: grabbing;
+}
+
+/* 3. Base Styling Body (Biarkan transparan agar efek kaca dari pembungkus terlihat) */
 .app-window-body {
     position: relative;
     flex-grow: 1;
+    background: transparent;
+}
+
+/* Kontrol Tombol Bawaan */
+.btn-win-ctrl {
+    border: none;
+    background: transparent;
+    transition: 0.2s;
+}
+
+.btn-close-win:hover {
+    background: #e81123 !important;
+    color: white !important;
+}
+
+/* =========================================
+   TEMA LIGHT (Mode Terang)
+   ========================================= */
+[data-bs-theme="light"] .app-window-header {
+    background-color: rgba(255, 255, 255, 0.4); /* Sedikit lebih pekat dari body */
+    border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+    color: #000;
+}
+
+[data-bs-theme="light"] .btn-win-ctrl {
+    color: #000;
+}
+
+[data-bs-theme="light"] .btn-win-ctrl:hover {
+    background: rgba(0, 0, 0, 0.1);
+}
+
+/* =========================================
+   TEMA DARK (Mode Gelap)
+   ========================================= */
+[data-bs-theme="dark"] .app-window-header {
+    background-color: rgba(0, 0, 0, 0.4); /* Sedikit lebih gelap dari body */
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    color: #fff;
+}
+
+[data-bs-theme="dark"] .btn-win-ctrl {
+    color: #fff;
+}
+
+[data-bs-theme="dark"] .btn-win-ctrl:hover {
+    background: rgba(255, 255, 255, 0.15);
 }
 
 .iframe-overlay {
@@ -219,6 +297,7 @@ progress::-webkit-progress-value {
 .resizer.br { bottom: -5px; right: -5px; width: 15px; height: 15px; cursor: se-resize; }
 
 /* Taskbar Area */
+/* 1. Base Styling (Layout & Efek Kaca) */
 #app-taskbar {
     position: fixed;
     bottom: 10px;
@@ -227,21 +306,60 @@ progress::-webkit-progress-value {
     display: flex;
     gap: 10px;
     z-index: 2000;
-    padding: 5px 15px;
-    background: var(--bg-overlay);
-    backdrop-filter: blur(10px);
+    padding: 8px 15px; /* Sedikit ditebalkan agar proporsional */
+    
+    /* Efek blur disamakan dengan komponen .card (15px) */
+    backdrop-filter: blur(15px);
+    -webkit-backdrop-filter: blur(15px);
+    box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+    border: 1px solid rgba(255, 255, 255, 0.18);
     border-radius: 20px;
+    transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* 2. Base Item Styling */
+.taskbar-item {
+    cursor: pointer;
+    padding: 6px 15px;
+    border-radius: 12px;
+    font-size: 0.85rem;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+}
+
+/* --- TEMA LIGHT (Mode Terang) --- */
+[data-bs-theme="light"] #app-taskbar {
+    background-color: rgba(255, 255, 255, 0.65) !important; /* Putih Transparan */
+}
+
+[data-bs-theme="light"] .taskbar-item {
+    background-color: rgba(255, 255, 255, 0.5);
+    color: #000;
+    border: 1px solid rgba(0, 0, 0, 0.05); /* Garis batas sangat tipis */
+}
+
+[data-bs-theme="light"] .taskbar-item:hover {
+    background-color: rgba(255, 255, 255, 0.9); /* Lebih solid saat di-hover */
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    transform: translateY(-2px); /* Efek melayang */
+}
+
+/* --- TEMA DARK (Mode Gelap) --- */
+[data-bs-theme="dark"] #app-taskbar {
+    background-color: rgba(0, 0, 0, 0.60) !important; /* Hitam Transparan */
     border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
-.taskbar-item {
-    cursor: pointer;
-    padding: 5px 15px;
-    border-radius: 10px;
-    background: rgba(255, 255, 255, 0.1);
-    color: var(--text-color);
-    font-size: 0.8rem;
-    transition: 0.3s;
+[data-bs-theme="dark"] .taskbar-item {
+    background-color: rgba(255, 255, 255, 0.1); /* Lapisan putih tipis di atas hitam */
+    color: #fff;
+    border: 1px solid transparent;
 }
 
-.taskbar-item:hover { background: rgba(255, 255, 255, 0.2); }
+[data-bs-theme="dark"] .taskbar-item:hover {
+    background-color: rgba(255, 255, 255, 0.25); /* Lebih terang saat di-hover */
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+    transform: translateY(-2px); /* Efek melayang */
+}
