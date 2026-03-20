@@ -12,6 +12,7 @@
         integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="anonymous">
     <link rel="stylesheet" href="../../assets/script/css/style.css">
 </head>
+
 <body>
     <!-- Preload Page -->
     <app-preloader class="preload-page">
@@ -42,8 +43,8 @@
                                     </div>
                                 </div>
                                 <div class="col-2 ps-0 pe-2">
-                                    <button type="submit" class="btn btn-mica-blue w-100 h-100"><i
-                                            class="bi-search"></i></button>
+                                    <app-button type="submit" extra-class="w-100 h-100"><i
+                                            class="bi-search"></i></app-button>
                                 </div>
                                 <div class="col-12 mt-3 mb-2" style="max-height: 10vh;" id="suggestion-panel">
                                     <div class="row d-flex align-items-center justify-content-center text-center">
@@ -92,10 +93,10 @@
                                         <h5 class="display-5">Weather Info</h5>
                                     </div>
                                     <div class="col-4">
-                                        <button type="button" id="btnInfo" class="btn float-end" data-bs-toggle="modal"
-                                            data-bs-target="#infoModal">
+                                        <app-button id="btnInfo" extra-class="float-end" variant="transparent"
+                                            data-bs-toggle="modal" data-bs-target="#infoModal">
                                             <i class="bi bi-info-circle-fill"></i>
-                                        </button>
+                                        </app-button>
                                     </div>
                                 </div>
                             </div>
@@ -200,7 +201,8 @@
                                 </div>
                                 <div class="col-4">
                                     <div class="form-check form-switch">
-                                        <input class="form-check-input" type="checkbox" role="switch" id="switchSuggestionPanel" aria-checked="false">
+                                        <input class="form-check-input" type="checkbox" role="switch"
+                                            id="switchSuggestionPanel" aria-checked="false">
                                     </div>
                                 </div>
                             </div>
@@ -212,7 +214,8 @@
                                 </div>
                                 <div class="col-4">
                                     <div class="form-check form-switch">
-                                        <input class="form-check-input" type="checkbox" role="switch" id="switch3" aria-checked="false">
+                                        <input class="form-check-input" type="checkbox" role="switch" id="switch3"
+                                            aria-checked="false">
                                     </div>
                                 </div>
                             </div>
@@ -314,7 +317,7 @@
                                         <div class="col-12 mb-2">
                                             <h6><i class="bi bi-calendar-week"></i> Weekly</h6>
                                         </div>
-                                        
+
                                         <div id="table" class="col-12 mb-2">
                                             <table id="daily-forecast-table" class="table table-borderless">
                                                 <thead>
@@ -341,7 +344,7 @@
                                         <div class="col-12">
                                             <h6><i class="bi bi-card-text"></i> Summary</h6>
                                         </div>
-                                        
+
                                         <div class="col-12 mb-2" id="weather-summary">
 
                                         </div>
@@ -363,7 +366,7 @@
     integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo=" crossorigin="anonymous"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
     integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous">
-</script>
+    </script>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
     integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin="anonymous"></script>
 <script src="../../assets/script/js/component.js"></script>

@@ -19,6 +19,28 @@
     pointer-events: none;
 }
 
+/* Component: App Button Wrapper */
+app-button[extra-class*="w-100"],
+app-button[extra-class*="btn-block"] {
+    display: flex;
+    width: 100%;
+    flex: 1;
+}
+
+app-button[extra-class*="h-100"] {
+    display: flex;
+    height: 100%;
+}
+
+app-button[extra-class*="w-100"] > .btn,
+app-button[extra-class*="h-100"] > .btn {
+    width: 100%;
+    height: 100%;
+    display: inline-flex; 
+    align-items: center;      
+    justify-content: center;  
+}
+
 /* --- Frosted Glass Effect (Glassmorphism) --- */
 /* Kita override background card Bootstrap agar transparan */
 .card {
