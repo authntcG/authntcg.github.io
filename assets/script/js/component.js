@@ -283,6 +283,14 @@ class AppWindow extends HTMLElement {
 
         this.initEvents();
         this._applyInitialSize();
+
+        if (window.innerWidth <= 768) {
+            setTimeout(() => {
+                if (!this._isMaximized) {
+                    this.toggleMaximize();
+                }
+            }, 50);
+        }
     }
 
     _applyInitialSize() {
@@ -296,42 +304,69 @@ class AppWindow extends HTMLElement {
         const header = this.querySelector('.app-window-header');
         const overlay = this.querySelector('.iframe-overlay');
 
-        // --- MOUSE DOWN UNTUK DRAG ---
-        header.addEventListener('mousedown', (e) => {
+        // --- HELPER: Mengambil Koordinat (Mouse vs Touch) ---
+        const getPos = (e) => ({
+            x: e.touches ? e.touches[0].clientX : e.clientX,
+            y: e.touches ? e.touches[0].clientY : e.clientY
+        });
+
+        // --- FUNGSI DRAG START ---
+        const startDrag = (e) => {
             if (e.target.closest('.btn-win-ctrl') || this._isMaximized) return;
             this._isDragging = true;
-            this._isResizing = false; // Pastikan tidak bertabrakan
+            this._isResizing = false; 
             overlay.style.display = 'block';
-            this._offset = { x: this.offsetLeft - e.clientX, y: this.offsetTop - e.clientY };
+            
+            const pos = getPos(e);
+            this._offset = { x: this.offsetLeft - pos.x, y: this.offsetTop - pos.y };
             this.style.zIndex = Math.floor(Date.now() / 1000);
-        });
+        };
 
-        // --- MOUSE DOWN UNTUK RESIZE ---
+        // --- FUNGSI RESIZE START ---
+        const startResize = (e, target) => {
+            this._isResizing = true;
+            this._isDragging = false; 
+            this._currentResizer = target;
+            this._initialRect = this.getBoundingClientRect();
+            
+            const pos = getPos(e);
+            this._initialMouse = { x: pos.x, y: pos.y };
+            
+            overlay.style.display = 'block';
+            this.style.zIndex = Math.floor(Date.now() / 1000);
+            
+            e.stopPropagation(); 
+            // Hanya prevent default pada mouse untuk menghindari layar ponsel 'nge-freeze' saat disentuh
+            if (e.type === 'mousedown') e.preventDefault(); 
+        };
+
+        // BINDING EVENT START (Desktop & Mobile)
+        header.addEventListener('mousedown', startDrag);
+        header.addEventListener('touchstart', startDrag, { passive: true });
+
         this.querySelectorAll('.resizer').forEach(resizer => {
-            resizer.addEventListener('mousedown', (e) => {
-                this._isResizing = true;
-                this._isDragging = false; // Pastikan tidak menggeser saat meresize
-                this._currentResizer = e.target;
-                this._initialRect = this.getBoundingClientRect();
-                this._initialMouse = { x: e.clientX, y: e.clientY };
-                
-                overlay.style.display = 'block';
-                this.style.zIndex = Math.floor(Date.now() / 1000);
-                
-                e.stopPropagation(); // Cegah event bocor ke elemen bawahnya
-                e.preventDefault();
-            });
+            resizer.addEventListener('mousedown', (e) => startResize(e, e.target));
+            resizer.addEventListener('touchstart', (e) => startResize(e, e.target), { passive: false });
         });
 
-        // --- MOUSE MOVE GLOBAL ---
-        document.addEventListener('mousemove', (e) => {
+        // --- FUNGSI MOVE (GLOBAL) ---
+        const onMove = (e) => {
+            if (!this._isDragging && !this._isResizing) return;
+            
+            // Cegah halaman belakang ikut terscroll saat menggeser jendela di HP
+            if (e.type === 'touchmove') e.preventDefault(); 
+
+            const pos = getPos(e);
+
+            // Logika Dragging
             if (this._isDragging) {
-                this.style.left = (e.clientX + this._offset.x) + 'px';
-                this.style.top = (e.clientY + this._offset.y) + 'px';
+                this.style.left = (pos.x + this._offset.x) + 'px';
+                this.style.top = (pos.y + this._offset.y) + 'px';
             } 
+            // Logika Resizing
             else if (this._isResizing) {
-                const dx = e.clientX - this._initialMouse.x;
-                const dy = e.clientY - this._initialMouse.y;
+                const dx = pos.x - this._initialMouse.x;
+                const dy = pos.y - this._initialMouse.y;
                 const r = this._currentResizer.classList;
 
                 let newWidth = this._initialRect.width;
@@ -339,9 +374,9 @@ class AppWindow extends HTMLElement {
                 let newTop = this._initialRect.top;
                 let newLeft = this._initialRect.left;
 
-                // Batas minimum agar tidak error terbalik
-                const MIN_WIDTH = 300;
-                const MIN_HEIGHT = 200;
+                // Batas ukuran minimal (diperkecil untuk layar HP)
+                const MIN_WIDTH = 250;
+                const MIN_HEIGHT = 150;
 
                 // Hitung Vertikal
                 if (r.contains('t') || r.contains('tl') || r.contains('tr')) {
@@ -361,7 +396,6 @@ class AppWindow extends HTMLElement {
                     newWidth = this._initialRect.width + dx;
                 }
 
-                // Terapkan Gaya jika valid
                 if (newWidth > MIN_WIDTH) {
                     this.style.width = newWidth + 'px';
                     this.style.left = newLeft + 'px';
@@ -371,14 +405,23 @@ class AppWindow extends HTMLElement {
                     this.style.top = newTop + 'px';
                 }
             }
-        });
+        };
 
-        // --- MOUSE UP GLOBAL ---
-        document.addEventListener('mouseup', () => {
+        // BINDING EVENT MOVE (Desktop & Mobile)
+        // passive: false penting agar e.preventDefault() berfungsi di mobile
+        document.addEventListener('mousemove', onMove);
+        document.addEventListener('touchmove', onMove, { passive: false });
+
+        // --- FUNGSI END (GLOBAL) ---
+        const onEnd = () => {
             this._isDragging = false;
             this._isResizing = false;
             overlay.style.display = 'none';
-        });
+        };
+
+        // BINDING EVENT END (Desktop & Mobile)
+        document.addEventListener('mouseup', onEnd);
+        document.addEventListener('touchend', onEnd);
 
         // --- KONTROL TOMBOL ---
         this.querySelector('.btn-close-win').addEventListener('click', () => {
