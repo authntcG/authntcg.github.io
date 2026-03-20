@@ -14,9 +14,9 @@
 </head>
 <body>
     <!-- Preload Page -->
-    <div id="preload" class="preload-page">
+    <app-preloader class="preload-page">
         <progress id="loading-bar" value="0" max="100"></progress>
-    </div>
+    </app-preloader>
     <!-- Floating Buttons -->
     <button class="btn btn-settings" data-bs-toggle="modal" data-bs-target="#settingsModal"><i
             class="bi bi-gear"></i></button>
@@ -25,7 +25,9 @@
         <div class="row">
             <div class="col-12 mb-0">
                 <h1 class="text-start clock">Wait...</h1>
-                <h6 class="pt-0 h-6" id="location-info"></h6>
+                <h6 class="pt-0 h-6" id="location-info">
+                    Loading...
+                </h6>
             </div>
             <form action="https://www.google.com/search" method="get">
                 <div class="col-12 mb-2">
@@ -107,7 +109,7 @@
                                         </div>
                                         <div class="col">
                                             <h5 class="text-center" id="weather-name">
-                                                <!-- Weather Status -->
+                                                Loading...
                                             </h5>
                                             <p class="text-center text-capitalize" id="current-temp-data">
                                                 <!-- Temperature data -->
@@ -186,7 +188,7 @@
                                 <div class="col-4">
                                     <div class="form-check form-switch">
                                         <input class="form-check-input" type="checkbox" role="switch"
-                                            id="switchWeatherPanel">
+                                            id="switchWeatherPanel" aria-checked="false">
                                     </div>
                                 </div>
                             </div>
@@ -198,7 +200,7 @@
                                 </div>
                                 <div class="col-4">
                                     <div class="form-check form-switch">
-                                        <input class="form-check-input" type="checkbox" role="switch" id="switchSuggestionPanel">
+                                        <input class="form-check-input" type="checkbox" role="switch" id="switchSuggestionPanel" aria-checked="false">
                                     </div>
                                 </div>
                             </div>
@@ -210,7 +212,7 @@
                                 </div>
                                 <div class="col-4">
                                     <div class="form-check form-switch">
-                                        <input class="form-check-input" type="checkbox" role="switch" id="switch3">
+                                        <input class="form-check-input" type="checkbox" role="switch" id="switch3" aria-checked="false">
                                     </div>
                                 </div>
                             </div>
@@ -355,13 +357,7 @@
             </div>
         </div>
     </div>
-    <footer class="footer px-2">
-        <p>
-            <script>
-                document.write(new Date().getFullYear())
-            </script> authntc<span style="color: blue;">G!</span>
-        </p>
-    </footer>
+    <app-footer></app-footer>
 </body>
 <script src="https://code.jquery.com/jquery-3.7.1.min.js"
     integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo=" crossorigin="anonymous"></script>
@@ -370,6 +366,7 @@
 </script>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
     integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin="anonymous"></script>
-<script src="../../assets/script/js/script.js"></script>
+<script src="../../assets/script/js/component.js"></script>
+<script type="module" src="../../assets/script/js/script.js"></script>
 
 </html>

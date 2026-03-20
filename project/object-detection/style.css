@@ -1,21 +1,22 @@
-/* --- Preloader Animation --- */
+/* Component: Preloader */
 .preload-page {
     position: fixed;
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
-    background: #ffffff; /* Default background sebelum gambar load */
+    background-color: var(--bg-overlay);
+    backdrop-filter: blur(10px);
     z-index: 9999;
     display: flex;
-    justify-content: center;
     align-items: center;
-    flex-direction: column;
-    transition: opacity 0.5s ease-out;
+    justify-content: center;
+    transition: opacity 0.5s ease;
 }
 
-[data-bs-theme="dark"] .preload-page {
-    background: #212529;
+.preload-hidden {
+    opacity: 0;
+    pointer-events: none;
 }
 
 /* --- Frosted Glass Effect (Glassmorphism) --- */
@@ -116,24 +117,23 @@
   transform: translateX(-50%) scale(1.05);
 }
 
-
 /* Component: Preloader */
-.preload-page {
-    position: fixed;
+app-preloader {
+    position: fixed !important;
     top: 0;
     left: 0;
-    width: 100%;
-    height: 100%;
+    width: 100vw;
+    height: 100vh;
     background-color: var(--bg-overlay);
     backdrop-filter: blur(10px);
     z-index: 9999;
-    display: flex;
+    display: flex !important; /* Ini memaksa preloader membentang dan ke tengah */
     align-items: center;
     justify-content: center;
-    transition: opacity 0.3s ease;
+    transition: opacity 0.5s ease;
 }
 
-.preload-hidden {
+app-preloader.preload-hidden {
     opacity: 0;
     pointer-events: none;
 }
@@ -159,6 +159,6 @@ progress::-webkit-progress-value {
 }
 
 /* Dark mode support */
-[data-bs-theme="dark"] .preload-page {
+[data-bs-theme="dark"] app-preloader {
     background: #212529;
 }

@@ -14,9 +14,9 @@
 </head>
 <body>
     <!-- Preload Page -->
-    <div id="preload" class="preload-page">
+    <app-preloader class="preload-page">
         <progress id="loading-bar" value="0" max="100"></progress>
-    </div>
+    </app-preloader>
     <!-- Home Area -->
     <section class="parent container d-flex justify-content-center align-items-center h-100 w-100">
         <div class="row">
@@ -47,13 +47,7 @@
         </div>
     </section>
 
-    <footer class="footer px-2">
-        <p>
-            <script>
-                document.write(new Date().getFullYear())
-            </script> authntc<span style="color: blue;">G!</span>
-        </p>
-    </footer>
+    <app-footer></app-footer>
 </body>
 <script src="https://code.jquery.com/jquery-3.7.1.min.js"
     integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo=" crossorigin="anonymous"></script>
@@ -62,6 +56,7 @@
 </script>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
     integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin="anonymous"></script>
-<script src="assets/script/js/script.js"></script>
+<script src="assets/script/js/component.js"></script>
+<script type="module" src="assets/script/js/script.js"></script>
 
 </html>

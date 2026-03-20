@@ -1,6 +1,8 @@
 /**
  * Configuration & Constants
  */
+import { Utils } from './utils.js';
+
 const CONFIG = {
     API: {
         METEO: "https://api.open-meteo.com/v1/forecast",
@@ -9,76 +11,6 @@ const CONFIG = {
     },
     REFRESH_INTERVAL: 15 * 60 * 1000, // 15 Menit
     DEFAULT_COORDS: { lat: 51.505, lon: -0.09 }
-};
-
-/**
- * Module: Utility Functions
- */
-const Utils = {
-    getDayName: (index) => ['Hari ini', 'Besok', 'Lusa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'][index] || `Hari ke-${index + 1}`,
-
-    getWindDirection: (degree) => {
-        const directions = ["Utara", "Timur Laut", "Timur", "Tenggara", "Selatan", "Barat Daya", "Barat", "Barat Laut"];
-        return directions[Math.floor(((degree + 22.5) % 360) / 45)];
-    },
-
-    getUVInfo: (uvIndex) => {
-        if (uvIndex <= 2) return { scale: "Rendah", recommendation: "Aman di luar ruangan." };
-        if (uvIndex <= 5) return { scale: "Sedang", recommendation: "Gunakan tabir surya." };
-        if (uvIndex <= 7) return { scale: "Tinggi", recommendation: "Lindungi diri, gunakan topi." };
-        if (uvIndex <= 10) return { scale: "Sangat Tinggi", recommendation: "Hindari matahari siang." };
-        return { scale: "Ekstrem", recommendation: "Bahaya! Hindari keluar rumah." };
-    },
-
-    getWeatherMeta: (code) => {
-        const map = {
-            0: { icon: 'bi-sun', msg: 'Cerah', advice: 'Gunakan tabir surya.' },
-            1: { icon: 'bi-cloud-sun', msg: 'Sebagian Berawan', advice: 'Nyaman untuk beraktivitas.' },
-            2: { icon: 'bi-cloud', msg: 'Berawan', advice: 'Cuaca sejuk.' },
-            3: { icon: 'bi-clouds', msg: 'Mendung', advice: 'Mungkin akan hujan.' },
-            45: { icon: 'bi-cloud-fog', msg: 'Kabut', advice: 'Hati-hati berkendara.' },
-            51: { icon: 'bi-cloud-drizzle', msg: 'Gerimis', advice: 'Siapkan payung.' },
-            61: { icon: 'bi-cloud-rain', msg: 'Hujan Ringan', advice: 'Bawa payung.' },
-            63: { icon: 'bi-cloud-rain', msg: 'Hujan Sedang', advice: 'Sebaiknya di dalam ruangan.' },
-            80: { icon: 'bi-cloud-rain-heavy', msg: 'Hujan Deras', advice: 'Waspada genangan air.' },
-            95: { icon: 'bi-cloud-lightning', msg: 'Badai Petir', advice: 'Cari tempat berlindung.' }
-        };
-        const defaultMeta = { icon: 'bi-question-circle', msg: 'Tidak Diketahui', advice: '-' };
-
-        if (code >= 51 && code <= 67) return { icon: 'bi-cloud-rain', msg: 'Hujan', advice: 'Sedia payung.' };
-        if (code >= 80 && code <= 99) return { icon: 'bi-cloud-lightning-rain', msg: 'Badai', advice: 'Bahaya.' };
-
-        return map[code] || defaultMeta;
-    },
-
-    // --- Fungsi BARU (WAJIB DITAMBAHKAN UNTUK CLEAN CODE) ---
-
-    // 1. Wrapper Promise untuk load gambar (Async/Await support)
-    loadImage: (url) => {
-        return new Promise((resolve, reject) => {
-            const img = new Image();
-            img.crossOrigin = "Anonymous";
-            img.onload = () => resolve(img);
-            img.onerror = (e) => reject(e);
-            img.src = url;
-        });
-    },
-
-    // 2. Hitung kecerahan dari elemen gambar
-    calculateBrightness: (imageElement) => {
-        const canvas = document.createElement('canvas');
-        const ctx = canvas.getContext('2d');
-        
-        // Resize ke 1x1 pixel untuk rata-rata warna
-        canvas.width = 1;
-        canvas.height = 1;
-        ctx.drawImage(imageElement, 0, 0, 1, 1);
-        
-        const [r, g, b] = ctx.getImageData(0, 0, 1, 1).data;
-        
-        // Rumus Luminance: 0.299*R + 0.587*G + 0.114*B
-        return (0.299 * r) + (0.587 * g) + (0.114 * b);
-    }
 };
 
 /**
@@ -96,21 +28,13 @@ const UIManager = {
         this.initTheme();
         this.initDynamicBackground();
         this.initClock();
-        this.initLoader();
         this.loadPanelState();
         this.setupEventListeners();
     },
 
     async initDynamicBackground() {
         try {
-            const img = await Utils.loadImage(this.BG_CONFIG.URL);
-
             document.body.style.backgroundImage = `url('${this.BG_CONFIG.URL}')`;
-
-            // const brightness = Utils.calculateBrightness(img);
-
-            // this.applyTextColor(brightness);
-
         } catch (error) {
             console.warn("Dynamic Background Error:", error);
             document.documentElement.style.removeProperty('--text-color');
@@ -150,23 +74,6 @@ const UIManager = {
         };
         update();
         setInterval(update, 1000);
-    },
-
-    initLoader() {
-        const bar = document.getElementById('loading-bar');
-        const preload = document.getElementById('preload');
-        let progress = 0;
-
-        const interval = setInterval(() => {
-            if (progress < 90) bar.value = ++progress;
-            else clearInterval(interval);
-        }, 15);
-
-        window.addEventListener('load', () => {
-            clearInterval(interval);
-            bar.value = 100;
-            setTimeout(() => preload.classList.add('preload-hidden'), 300);
-        });
     },
 
     loadPanelState() {
