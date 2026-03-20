@@ -1,51 +1,46 @@
 class AppPreloader extends HTMLElement {
+    static CONFIG = {
+        ANIMATION_SPEED_MS: 15,
+        MAX_FAKE_PROGRESS: 90,
+        FADE_OUT_DURATION_MS: 500,
+        DELAY_BEFORE_CLOSE_MS: 200
+    };
+
     connectedCallback() {
-        // Tunda eksekusi sejenak agar browser selesai membaca tag <progress> di dalam HTML
         setTimeout(() => {
             this.initLogic();
         }, 0);
     }
-
+    
     initLogic() {
         const bar = this.querySelector('#loading-bar');
         let progress = 0;
         let interval;
 
-        // Fungsi utama untuk menghancurkan/menghilangkan overlay
         const hidePreloader = () => {
-            // Hentikan animasi
             if (interval) clearInterval(interval);
-            
-            // Penuhkan bar menjadi 100%
             if (bar) bar.value = 100;
             
-            // Jeda sedikit agar user melihat bar penuh, lalu sembunyikan
             setTimeout(() => {
                 this.classList.add('preload-hidden');
-                
-                // Hapus dari layar sepenuhnya setelah transisi CSS selesai (0.5 detik)
                 setTimeout(() => {
                     this.style.display = 'none';
-                }, 500); 
-            }, 200); 
+                }, AppPreloader.CONFIG.FADE_OUT_DURATION_MS); 
+            }, AppPreloader.CONFIG.DELAY_BEFORE_CLOSE_MS); 
         };
 
-        // Jalankan animasi loading jika elemen bar ditemukan
         if (bar) {
             interval = setInterval(() => {
-                if (progress < 90) {
+                if (progress < AppPreloader.CONFIG.MAX_FAKE_PROGRESS) {
                     progress++;
                     bar.value = progress;
                 }
-            }, 15);
+            }, AppPreloader.CONFIG.ANIMATION_SPEED_MS);
         }
 
-        // Cek apakah halaman sudah selesai dimuat sepenuhnya
         if (document.readyState === 'complete') {
-            // Jika sudah selesai sebelum script ini jalan, langsung sembunyikan
             hidePreloader();
         } else {
-            // Jika belum, tunggu sampai semua aset (gambar, css, dll) selesai dimuat
             window.addEventListener('load', hidePreloader);
         }
     }

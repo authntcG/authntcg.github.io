@@ -1,7 +1,9 @@
 /**
  * Configuration & Constants
  */
-import { Utils } from './utils.js';
+import {
+    Utils
+} from './utils.js';
 
 const CONFIG = {
     API: {
@@ -10,7 +12,10 @@ const CONFIG = {
         MAP_TILE: "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
     },
     REFRESH_INTERVAL: 15 * 60 * 1000, // 15 Menit
-    DEFAULT_COORDS: { lat: 51.505, lon: -0.09 }
+    DEFAULT_COORDS: {
+        lat: 51.505,
+        lon: -0.09
+    }
 };
 
 /**
@@ -23,7 +28,7 @@ const UIManager = {
         COLOR_DARK: '#000000', // Teks hitam untuk background terang
         COLOR_LIGHT: '#ffffff' // Teks putih untuk background gelap
     },
-    
+
     init() {
         this.initTheme();
         this.initDynamicBackground();
@@ -43,10 +48,14 @@ const UIManager = {
 
     applyTextColor(brightness) {
         const root = document.documentElement;
-        const { LUMINANCE_THRESHOLD, COLOR_DARK, COLOR_LIGHT } = this.BG_CONFIG;
+        const {
+            LUMINANCE_THRESHOLD,
+            COLOR_DARK,
+            COLOR_LIGHT
+        } = this.BG_CONFIG;
 
         const textColor = brightness > LUMINANCE_THRESHOLD ? COLOR_DARK : COLOR_LIGHT;
-        
+
         root.style.setProperty('--text-color', textColor);
         console.log(`Background Brightness: ${brightness.toFixed(0)}. Text Color: ${textColor}`);
     },
@@ -70,7 +79,8 @@ const UIManager = {
                 hour12: false
             });
             const period = now.getHours() >= 12 ? 'PM' : 'AM';
-            $(".clock").html(`${timeString} <span class='clock-period'>${period}</span>`);
+            const clockEl = document.querySelector('.clock');
+            if (clockEl) clockEl.innerHTML = `${timeString} <span class='clock-period'>${period}</span>`;
         };
         update();
         setInterval(update, 1000);
@@ -112,23 +122,24 @@ const UIManager = {
     },
 
     setupEventListeners() {
-        $('#infoModal').on('shown.bs.modal', function () {
-            // Cari tag <app-button> yang ada di dalam widget cuaca
-            const btnWrapper = document.querySelector('app-weather-widget app-button');
-            
-            if (btnWrapper) {
-                // Ambil koordinat langsung dari atribut 'wrapper' Web Component-nya
-                const lat = parseFloat(btnWrapper.getAttribute('data-latitude'));
-                const lon = parseFloat(btnWrapper.getAttribute('data-longitude'));
+        const infoModal = document.getElementById('infoModal');
+        if (infoModal) {
+            // Pada Vanilla JS Bootstrap, nama event-nya adalah 'shown.bs.modal'
+            infoModal.addEventListener('shown.bs.modal', function () {
+                const btnWrapper = document.querySelector('app-weather-widget app-button');
                 
-                // Pastikan datanya valid (bukan NaN) sebelum memanggil peta
-                if (!isNaN(lat) && !isNaN(lon)) {
-                     MapManager.show(lat, lon);
-                } else {
-                     console.warn("Peta tidak dimuat: Koordinat belum tersedia.");
+                if (btnWrapper) {
+                    const lat = parseFloat(btnWrapper.getAttribute('data-latitude'));
+                    const lon = parseFloat(btnWrapper.getAttribute('data-longitude'));
+                    
+                    if (!isNaN(lat) && !isNaN(lon)) {
+                         MapManager.show(lat, lon);
+                    } else {
+                         console.warn("Peta tidak dimuat: Koordinat belum tersedia.");
+                    }
                 }
-            }
-        });
+            });
+        }
     },
 };
 
@@ -163,7 +174,7 @@ const MapManager = {
 
         // Fix Leaflet sizing inside modal
         setTimeout(() => {
-             if (this.instance) this.instance.invalidateSize();
+            if (this.instance) this.instance.invalidateSize();
         }, 200);
     }
 };
@@ -177,7 +188,7 @@ const WeatherService = {
             latitude: lat,
             longitude: lon,
             current: 'temperature_2m,apparent_temperature,precipitation,weather_code,surface_pressure,wind_speed_10m,wind_direction_10m',
-            hourly: 'temperature_2m,weather_code,uv_index', 
+            hourly: 'temperature_2m,weather_code,uv_index',
             daily: 'weather_code,temperature_2m_max,temperature_2m_min,uv_index_max',
             timezone: 'auto'
         });
@@ -196,32 +207,43 @@ const WeatherService = {
             if (details && details.updateData) details.updateData(data.current, data.hourly, data.daily, data.current_units);
 
         } catch (err) {
-            console.error(err);
+            console.error('Weather Fetch Error:', err);
+            // Tangkap komponen widget dan tampilkan error ke layar pengguna
+            const widget = document.getElementById('weather-panel');
+            if (widget && widget.showError) {
+                widget.showError("Periksa koneksi internetmu atau coba lagi nanti.");
+            }
         }
     },
 
     async fetchLocationName(lat, lon) {
         try {
             const url = `${CONFIG.API.GEOCODE}?latitude=${lat}&longitude=${lon}&localityLanguage=id`;
-            
             const response = await fetch(url);
-            
             if (!response.ok) throw new Error(`Geocode API Error: ${response.status}`);
             
             const data = await response.json();
             const cityName = data.city || data.locality || data.principalSubdivision || 'Lokasi';
             const fullLocation = `${data.locality || ''}, ${data.principalSubdivision || ''}, ${data.countryName || ''}`;
 
-            $('#location-info').html(`<i class="bi bi-geo"></i> ${cityName}`);
-            $('#infoLocation').text(fullLocation);
-            
-            $('#infoLatitude').text(lat);
-            $('#infoLongitude').text(lon);
-            $('#btnInfo').attr('data-latitude', lat).attr('data-longitude', lon);
+            // KODE BARU (Vanilla JS)
+            const locInfo = document.getElementById('location-info');
+            const infoLoc = document.getElementById('infoLocation');
+            const infoLat = document.getElementById('infoLatitude');
+            const infoLon = document.getElementById('infoLongitude');
+
+            if (locInfo) locInfo.innerHTML = `<i class="bi bi-geo"></i> ${cityName}`;
+            if (infoLoc) infoLoc.textContent = fullLocation;
+            if (infoLat) infoLat.textContent = lat;
+            if (infoLon) infoLon.textContent = lon;
+
+            // Catatan: Baris $('#btnInfo').attr(...) kita HAPUS total!
+            // Karena kita sudah menangani datanya di app-weather-widget
 
         } catch (err) {
             console.error('Location Fetch Error:', err);
-            $('#location-info').html(`<i class="bi bi-geo-alt-fill"></i> Gagal Memuat Lokasi`);
+            const locInfo = document.getElementById('location-info');
+            if (locInfo) locInfo.innerHTML = `<i class="bi bi-geo-alt-fill"></i> Gagal Memuat Lokasi`;
         }
     }
 };

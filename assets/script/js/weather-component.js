@@ -136,6 +136,19 @@ class AppWeatherDetails extends HTMLElement {
             </div>
         `;
     }
+
+    // Tambahkan di dalam class AppWeatherWidget
+    showError(message) {
+        this.innerHTML = `
+            <div class="card h-100 border-danger">
+                <div class="card-body d-flex flex-column justify-content-center align-items-center text-danger text-center">
+                    <i class="bi bi-exclamation-triangle-fill mb-2" style="font-size: 3rem;"></i>
+                    <h5 class="card-title">Gagal Memuat Cuaca</h5>
+                    <p class="card-text">${message}</p>
+                </div>
+            </div>
+        `;
+    }
 }
 
 customElements.define('app-weather-widget', AppWeatherWidget);
