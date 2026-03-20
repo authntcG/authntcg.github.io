@@ -36,24 +36,4 @@ export const Utils = {
 
         return map[code] || defaultMeta;
     },
-
-    loadImage: (url) => {
-        return new Promise((resolve, reject) => {
-            const img = new Image();
-            img.crossOrigin = "Anonymous";
-            img.onload = () => resolve(img);
-            img.onerror = (e) => reject(e);
-            img.src = url;
-        });
-    },
-
-    calculateBrightness: (imageElement) => {
-        const canvas = document.createElement('canvas');
-        const ctx = canvas.getContext('2d');
-        canvas.width = 1;
-        canvas.height = 1;
-        ctx.drawImage(imageElement, 0, 0, 1, 1);
-        const [r, g, b] = ctx.getImageData(0, 0, 1, 1).data;
-        return (0.299 * r) + (0.587 * g) + (0.114 * b);
-    }
 };
