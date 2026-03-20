@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en" data-bs-theme="auto">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -11,6 +12,7 @@
         integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="anonymous">
     <link rel="stylesheet" href="assets/script/css/style.css">
 </head>
+
 <body>
     <!-- Preload Page -->
     <app-preloader class="preload-page">
@@ -23,21 +25,42 @@
                 <!-- Pictures Area -->
                 <div class="row">
                     <div class="col-12 mb-4">
-                        <app-button href="index.html" size="sm">< Back To Home</app-button>
+                        <app-button href="index.html" size="sm">
+                            < Back To Home</app-button>
                     </div>
-                    <div class="col-12">
-                        <h3>About</h3>
-                    </div>
-                    <div class="col-2">
-                        <img src="assets/img/avatar.jpg" alt="Thumb" class="img-fluid" style="border-radius: 5%; max-width: 500px;  width: 100%; height: 100%; object-fit: cover; ">
-                    </div>
-                    <div class="col-10">
-                        <p>
-                            Hi there.
-                        </p>
-                        <p>
-                            Aku Galih Respati Permana, u can call me Galih. I'm currenty working as IT Support FLS at HM Sampoerna at Jakarta, ID. Selain menjadi support, saya memiliki pengalaman sebagai Junior Programmer di PT. Jagoo Talenta Indonesia. For Summary of my work, u can download my CV at home screen before about page. Nice to meet u all. 
-                        </p>
+                    <div class="row align-items-center">
+                        <div class="col-12 order-1">
+                            <h3>About</h3>
+                        </div>
+                        <div class="col-12 col-md-2 order-2 mb-3 mb-md-0">
+                            <img src="assets/img/avatar.jpg" alt="Galih Respati Permana" class="img-fluid"
+                                style="border-radius: 5%; width: 100%; height: auto; aspect-ratio: 1 / 1; object-fit: cover;">
+                        </div>
+                        <div class="col-12 col-md-10 order-3 lead-paragraph">
+                            <p class="lead">
+                                <strong>Hi there!</strong>
+                            </p>
+                            <p>
+                                Saya <strong>Galih Respati Permana</strong>, lulusan Teknik Informatika dari
+                                <strong>Institut Teknologi Nasional (ITENAS)</strong>. Saya adalah seorang Web Developer
+                                yang memiliki spesialisasi dalam membangun aplikasi web modern, efisien, dan berskala besar.
+                            </p>
+                            <p>
+                                Saat ini, saya berkarir di PT. Jagoo Talenta Indonesia, di mana saya bertanggung
+                                jawab dalam pengembangan back-end menggunakan NestJS dan front-end menggunakan
+                                ReactJS. Pengalaman saya sebagai L1 Support Analyst sebelumnya memberikan dasar yang kuat
+                                dalam pemahaman infrastruktur dan sistem yang andal.
+                            </p>
+                            <p>
+                                Saya memiliki passion yang besar pada arsitektur perangkat lunak dan optimasi sistem.
+                                Dengan latar belakang pendidikan dan pengalaman praktis dalam pengembangan aplikasi, saya
+                                selalu berusaha memberikan solusi teknologi terbaik yang memberikan nilai dampak nyata.
+                            </p>
+                            <p>
+                                <em>Tertarik untuk berkolaborasi atau ingin mengetahui lebih lanjut mengenai projek-projek
+                                    saya? Silakan unduh CV saya melalui tombol di halaman beranda. Nice to meet you!</em>
+                            </p>
+                        </div>
                     </div>
                     <div class="my-2">
                         <hr>
@@ -50,12 +73,14 @@
                             <div class="card-body">
                                 <div class="row">
                                     <div class="col-12 mb-2">
-                                        <img src="assets/img/inspiro.gif" alt="Thumb" class="img-fluid" style="border-radius: 5%;">
+                                        <img src="assets/img/inspiro.gif" alt="Thumb" class="img-fluid"
+                                            style="border-radius: 5%;">
                                     </div>
                                     <div class="col-12">
                                         <h5>Inspiro Dashboard</h5>
                                         <p>
-                                            A simple dashboard for monitoring your daily activities, built with HTML, CSS, and JavaScript.
+                                            A simple dashboard for monitoring your daily activities, built with HTML,
+                                            CSS, and JavaScript.
                                         </p>
                                         <app-button href="project/inspiro/index.html">Visit Page</app-button>
                                     </div>
@@ -68,12 +93,14 @@
                             <div class="card-body">
                                 <div class="row">
                                     <div class="col-12 mb-2">
-                                        <img src="assets/img/obj-detection.png" alt="Thumb" class="img-fluid" style="border-radius: 5%;">
+                                        <img src="assets/img/obj-detection.png" alt="Thumb" class="img-fluid"
+                                            style="border-radius: 5%;">
                                     </div>
                                     <div class="col-12">
                                         <h5>Object Detection</h5>
                                         <p>
-                                            <strong>Experimental : </strong> Object detection using COCO-SSD model with TensorFlow.js.
+                                            <strong>Experimental : </strong> Object detection using COCO-SSD model with
+                                            TensorFlow.js.
                                         </p>
                                         <app-button href="project/object-detection/index.html">Visit Page</app-button>
                                     </div>
@@ -92,7 +119,7 @@
     integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo=" crossorigin="anonymous"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
     integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous">
-</script>
+    </script>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
     integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin="anonymous"></script>
 <script src="assets/script/js/component.js"></script>
