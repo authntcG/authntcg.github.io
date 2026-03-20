@@ -1,10 +1,8 @@
+import { AppConfig } from './config.js';
+
 /**
  * Configuration & Constants
  */
-import {
-    Utils
-} from './utils.js';
-
 const CONFIG = {
     API: {
         METEO: "https://api.open-meteo.com/v1/forecast",
@@ -22,13 +20,6 @@ const CONFIG = {
  * Module: UI & Theme Manager
  */
 const UIManager = {
-    BG_CONFIG: {
-        URL: 'https://picsum.photos/1920/1080',
-        LUMINANCE_THRESHOLD: 128,
-        COLOR_DARK: '#000000', // Teks hitam untuk background terang
-        COLOR_LIGHT: '#ffffff' // Teks putih untuk background gelap
-    },
-
     init() {
         this.initTheme();
         this.initDynamicBackground();
@@ -39,7 +30,7 @@ const UIManager = {
 
     async initDynamicBackground() {
         try {
-            document.body.style.backgroundImage = `url('${this.BG_CONFIG.URL}')`;
+            document.body.style.backgroundImage = `url('${AppConfig.UI.BG_URL}')`;
         } catch (error) {
             console.warn("Dynamic Background Error:", error);
             document.documentElement.style.removeProperty('--text-color');
@@ -52,7 +43,7 @@ const UIManager = {
             LUMINANCE_THRESHOLD,
             COLOR_DARK,
             COLOR_LIGHT
-        } = this.BG_CONFIG;
+        } = AppConfig.UI;
 
         const textColor = brightness > LUMINANCE_THRESHOLD ? COLOR_DARK : COLOR_LIGHT;
 
@@ -124,59 +115,31 @@ const UIManager = {
     setupEventListeners() {
         const infoModal = document.getElementById('infoModal');
         if (infoModal) {
-            // Pada Vanilla JS Bootstrap, nama event-nya adalah 'shown.bs.modal'
             infoModal.addEventListener('shown.bs.modal', function () {
+                // 1. Ambil data koordinat dari widget
                 const btnWrapper = document.querySelector('app-weather-widget app-button');
+                // 2. Cari komponen peta kita
+                const mapComponent = document.getElementById('infoMaps'); 
                 
-                if (btnWrapper) {
-                    const lat = parseFloat(btnWrapper.getAttribute('data-latitude'));
-                    const lon = parseFloat(btnWrapper.getAttribute('data-longitude'));
+                if (btnWrapper && mapComponent) {
+                    const lat = btnWrapper.getAttribute('data-latitude');
+                    const lon = btnWrapper.getAttribute('data-longitude');
                     
-                    if (!isNaN(lat) && !isNaN(lon)) {
-                         MapManager.show(lat, lon);
-                    } else {
-                         console.warn("Peta tidak dimuat: Koordinat belum tersedia.");
+                    if (lat && lon) {
+                        // KEAJAIBAN WEB COMPONENT: 
+                        // Cukup set atributnya, maka peta akan otomatis merender dirinya sendiri!
+                        mapComponent.setAttribute('latitude', lat);
+                        mapComponent.setAttribute('longitude', lon);
+                        
+                        // Panggil perbaikan ukuran karena peta muncul dari dalam Modal tersembunyi
+                        if (typeof mapComponent.invalidateMapSize === 'function') {
+                            mapComponent.invalidateMapSize();
+                        }
                     }
                 }
             });
         }
     },
-};
-
-/**
- * Module: Map Manager
- */
-const MapManager = {
-    instance: null,
-    marker: null,
-    circle: null,
-
-    show(lat, lon) {
-        // Hanya inisialisasi jika instance belum ada
-        if (this.instance === null) {
-            this.instance = L.map('infoMaps').setView([lat, lon], 15);
-            L.tileLayer(CONFIG.API.MAP_TILE, {
-                attribution: '&copy; OpenStreetMap'
-            }).addTo(this.instance);
-
-            this.marker = L.marker([lat, lon]).addTo(this.instance);
-            this.circle = L.circle([lat, lon], {
-                color: '#1b00ff',
-                fillOpacity: 0.3,
-                radius: 100
-            }).addTo(this.instance);
-        } else {
-            // Jika sudah ada, cukup update posisi
-            this.instance.setView([lat, lon], 15);
-            this.marker.setLatLng([lat, lon]);
-            this.circle.setLatLng([lat, lon]);
-        }
-
-        // Fix Leaflet sizing inside modal
-        setTimeout(() => {
-            if (this.instance) this.instance.invalidateSize();
-        }, 200);
-    }
 };
 
 /**
@@ -194,7 +157,7 @@ const WeatherService = {
         });
 
         try {
-            const response = await fetch(`${CONFIG.API.METEO}?${params}`);
+            const response = await fetch(`${AppConfig.WEATHER.API_METEO}?${params}`);
             if (!response.ok) throw new Error('Weather API Error');
             const data = await response.json();
 
@@ -218,7 +181,7 @@ const WeatherService = {
 
     async fetchLocationName(lat, lon) {
         try {
-            const url = `${CONFIG.API.GEOCODE}?latitude=${lat}&longitude=${lon}&localityLanguage=id`;
+            const url = `${AppConfig.WEATHER.API_GEOCODE}?latitude=${lat}&longitude=${lon}&localityLanguage=id`;
             const response = await fetch(url);
             if (!response.ok) throw new Error(`Geocode API Error: ${response.status}`);
             
@@ -275,7 +238,7 @@ const App = {
         // Interval run
         setInterval(() => {
             navigator.geolocation.getCurrentPosition(updatePosition, err => console.error(err));
-        }, CONFIG.REFRESH_INTERVAL);
+        }, AppConfig.WEATHER.REFRESH_INTERVAL);
     }
 };
 

@@ -145,6 +145,81 @@ class AppButton extends HTMLElement {
     }
 }
 
+/**
+ * Komponen: Peta Reusable (Leaflet Wrapper)
+ * Penggunaan: <app-map latitude="-6.2" longitude="106.8"></app-map>
+ */
+class AppMap extends HTMLElement {
+    // 1. Beri tahu browser untuk "memantau" perubahan pada atribut ini
+    static get observedAttributes() {
+        return ['latitude', 'longitude'];
+    }
+
+    connectedCallback() {
+        // Hanya set display block. 
+        // Tinggi dan lebar biarkan diatur oleh file style.css (#infoMaps)
+        this.style.display = 'block';
+
+        // Buat container HTML untuk Leaflet
+        this.innerHTML = `<div style="width: 100%; height: 100%; border-radius: 10px; z-index: 1;"></div>`;
+        this.mapContainer = this.firstElementChild;
+        
+        this.mapInstance = null;
+        this.marker = null;
+        this.circle = null;
+
+        // Render jika atribut sudah ada saat pertama kali dimuat
+        this.renderMap();
+    }
+
+    // 2. Fungsi ini OTOMATIS terpanggil jika atribut latitude/longitude diubah
+    attributeChangedCallback(name, oldValue, newValue) {
+        if (oldValue !== newValue && this.mapContainer) {
+            this.renderMap();
+        }
+    }
+
+    // 3. Logika internal Peta
+    renderMap() {
+        const lat = parseFloat(this.getAttribute('latitude'));
+        const lon = parseFloat(this.getAttribute('longitude'));
+
+        if (isNaN(lat) || isNaN(lon)) return;
+
+        // Cek apakah script Leaflet sudah dimuat oleh HTML
+        if (typeof L === 'undefined') {
+            console.warn("Leaflet.js belum dimuat.");
+            return;
+        }
+
+        if (!this.mapInstance) {
+            // Jika belum ada, buat peta baru
+            this.mapInstance = L.map(this.mapContainer).setView([lat, lon], 15);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '&copy; OpenStreetMap'
+            }).addTo(this.mapInstance);
+
+            this.marker = L.marker([lat, lon]).addTo(this.mapInstance);
+            this.circle = L.circle([lat, lon], {
+                color: '#1b00ff', fillOpacity: 0.3, radius: 100
+            }).addTo(this.mapInstance);
+        } else {
+            // Jika sudah ada, cukup geser posisinya (Mencegah error ganda!)
+            this.mapInstance.setView([lat, lon], 15);
+            this.marker.setLatLng([lat, lon]);
+            this.circle.setLatLng([lat, lon]);
+        }
+    }
+
+    // 4. Fungsi publik untuk fix bug ukuran Modal Bootstrap
+    invalidateMapSize() {
+        if (this.mapInstance) {
+            setTimeout(() => this.mapInstance.invalidateSize(), 200);
+        }
+    }
+}
+
+customElements.define('app-map', AppMap);
 customElements.define('app-button', AppButton);
 customElements.define('app-preloader', AppPreloader);
 customElements.define('app-footer', AppFooter);
