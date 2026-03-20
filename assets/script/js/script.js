@@ -113,80 +113,23 @@ const UIManager = {
 
     setupEventListeners() {
         $('#infoModal').on('shown.bs.modal', function () {
-            const btn = document.getElementById('btnInfo');
-            MapManager.show(parseFloat(btn.dataset.latitude), parseFloat(btn.dataset.longitude));
+            // Cari tag <app-button> yang ada di dalam widget cuaca
+            const btnWrapper = document.querySelector('app-weather-widget app-button');
+            
+            if (btnWrapper) {
+                // Ambil koordinat langsung dari atribut 'wrapper' Web Component-nya
+                const lat = parseFloat(btnWrapper.getAttribute('data-latitude'));
+                const lon = parseFloat(btnWrapper.getAttribute('data-longitude'));
+                
+                // Pastikan datanya valid (bukan NaN) sebelum memanggil peta
+                if (!isNaN(lat) && !isNaN(lon)) {
+                     MapManager.show(lat, lon);
+                } else {
+                     console.warn("Peta tidak dimuat: Koordinat belum tersedia.");
+                }
+            }
         });
     },
-
-    updateWeatherUI(current, hourly, daily, units) {
-        const weatherMeta = Utils.getWeatherMeta(current.weather_code);
-        const windDir = Utils.getWindDirection(current.wind_direction_10m);
-        const todayUV = Utils.getUVInfo(daily.uv_index_max[0]);
-
-        // Helper untuk update HTML
-        const setHtml = (id, html) => $(id).html(html);
-
-        // Update Header Info
-        setHtml('#current-temp-data', `<strong>${current.temperature_2m}${units.temperature_2m}</strong>, terasa <strong>${current.apparent_temperature}${units.apparent_temperature}</strong>`);
-        setHtml('#weather-precipitation', `<i class="bi bi-info"></i> ${weatherMeta.msg}`);
-        setHtml('#wind-info', `<i class="bi bi-wind"></i> ${current.wind_speed_10m} ${units.wind_speed_10m} (${windDir})`);
-        setHtml('#weather-icons', `<p class="${weatherMeta.icon} text-center" style="font-size: 10vh; margin-bottom: -15px; font-weight: lighter !important;"></p>`);
-        setHtml('#weather-name', weatherMeta.msg);
-
-        // Update Carousel
-        setHtml('#carousel-content', `
-            <div class="carousel-item active">
-                <div class="d-flex flex-column"><small>Angin</small><div>${current.wind_speed_10m} ${units.wind_speed_10m} ${windDir}</div></div>
-            </div>
-            <div class="carousel-item">
-                <div class="d-flex flex-column"><small>Saran</small><div>${weatherMeta.advice}</div></div>
-            </div>
-        `);
-
-        // Update Summary
-        setHtml('#weather-summary', `
-            <h6>Hari Ini</h6><p>${weatherMeta.msg}. Suhu ${current.temperature_2m}°C. UV: ${todayUV.scale}.</p>
-            <h6>Saran</h6><p>${weatherMeta.advice}</p>
-        `);
-
-        // Render Hourly Table (Only current day, current hour forward)
-        const currentHour = new Date().getHours();
-        const hourlyRows = hourly.time.map((time, i) => {
-            const date = new Date(time);
-            if (date.getDate() !== new Date().getDate() || date.getHours() < currentHour) return '';
-
-            const meta = Utils.getWeatherMeta(hourly.weather_code[i]);
-            const isNow = date.getHours() === currentHour ? 'bg-warning' : '';
-
-            return `
-                <td class="text-center ${isNow}">
-                    <div class="row">
-                        <small style="font-size: 2vh;">${date.getHours()}:00</small>
-                        <i class="${meta.icon}" style="font-size: 5vh;"></i>
-                        <p class="m-0">${hourly.temperature_2m[i]} ${units.temperature_2m}</p>
-                    </div>
-                </td>`;
-        }).join('');
-        $("#hourly-forecast-table tbody").html(hourlyRows);
-
-        // Render Daily Table
-        const dailyRows = daily.time.map((time, i) => {
-            const meta = Utils.getWeatherMeta(daily.weather_code[i]);
-            const dateStr = new Date(time).toLocaleDateString("id-ID", {
-                weekday: 'short',
-                day: 'numeric',
-                month: 'short'
-            });
-            return `
-                <tr>
-                    <td>${dateStr}</td>
-                    <td><i class="${meta.icon}"></i> ${meta.msg}</td>
-                    <td>${daily.temperature_2m_min[i]}°</td>
-                    <td>${daily.temperature_2m_max[i]}°</td>
-                </tr>`;
-        }).join('');
-        $("#daily-forecast-table tbody").html(dailyRows);
-    }
 };
 
 /**
@@ -198,7 +141,8 @@ const MapManager = {
     circle: null,
 
     show(lat, lon) {
-        if (!this.instance) {
+        // Hanya inisialisasi jika instance belum ada
+        if (this.instance === null) {
             this.instance = L.map('infoMaps').setView([lat, lon], 15);
             L.tileLayer(CONFIG.API.MAP_TILE, {
                 attribution: '&copy; OpenStreetMap'
@@ -211,13 +155,16 @@ const MapManager = {
                 radius: 100
             }).addTo(this.instance);
         } else {
+            // Jika sudah ada, cukup update posisi
             this.instance.setView([lat, lon], 15);
             this.marker.setLatLng([lat, lon]);
             this.circle.setLatLng([lat, lon]);
         }
 
         // Fix Leaflet sizing inside modal
-        setTimeout(() => this.instance.invalidateSize(), 200);
+        setTimeout(() => {
+             if (this.instance) this.instance.invalidateSize();
+        }, 200);
     }
 };
 
@@ -240,7 +187,14 @@ const WeatherService = {
             if (!response.ok) throw new Error('Weather API Error');
             const data = await response.json();
 
-            UIManager.updateWeatherUI(data.current, data.hourly, data.daily, data.current_units);
+            // Di dalam WeatherService.fetchWeather:
+            const widget = document.getElementById('weather-panel');
+            const details = document.querySelector('app-weather-details');
+
+            // Tambahkan lat, lon saat memanggil widget.updateData
+            if (widget && widget.updateData) widget.updateData(data.current, data.current_units, lat, lon);
+            if (details && details.updateData) details.updateData(data.current, data.hourly, data.daily, data.current_units);
+
         } catch (err) {
             console.error(err);
         }

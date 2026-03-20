@@ -83,92 +83,7 @@
                     </div>
                 </div>
             </form>
-            <div class="col-12 mb-2" id="weather-panel">
-                <div class="card">
-                    <div class="card-body">
-                        <div class="row">
-                            <div class="col-12 mb-2">
-                                <div class="row">
-                                    <div class="col-8">
-                                        <h5 class="display-5">Weather Info</h5>
-                                    </div>
-                                    <div class="col-4">
-                                        <app-button id="btnInfo" extra-class="float-end" variant="transparent"
-                                            data-bs-toggle="modal" data-bs-target="#infoModal">
-                                            <i class="bi bi-info-circle-fill"></i>
-                                        </app-button>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-12 col-lg-8 mb-2">
-                                <div class="d-flex justify-content-center align-items-center">
-                                    <div class="row">
-                                        <div class="col-12">
-                                            <div id="weather-icons">
-                                                <!-- Weather Icons -->
-                                            </div>
-                                        </div>
-                                        <div class="col">
-                                            <h5 class="text-center" id="weather-name">
-                                                Loading...
-                                            </h5>
-                                            <p class="text-center text-capitalize" id="current-temp-data">
-                                                <!-- Temperature data -->
-                                            </p>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-12 col-lg-4">
-                                <div class="row">
-                                    <div class="col-6 col-sm-6 col-lg-12 px-1 mb-2 d-none d-sm-none d-md-block">
-                                        <div class="card">
-                                            <div class="card-body">
-                                                <p class="m-0" id="weather-precipitation">
-                                                    <!-- Weather precipitation -->
-                                                </p>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="col-6 col-sm-6 col-lg-12 px-1 mb-2 d-none d-sm-none d-md-block">
-                                        <div class="card">
-                                            <div class="card-body">
-                                                <p class="m-0" id="wind-info">
-                                                    <!-- Wind informations -->
-                                                </p>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="col-12 col-lg-12 px-1 mb-2 d-block d-sm-block d-md-none">
-                                        <div class="card">
-                                            <div class="card-body">
-                                                <div id="carouselInformation" class="carousel slide"
-                                                    data-bs-ride="carousel">
-                                                    <div class="carousel-inner" id="carousel-content">
-                                                        <!-- Carousel Content Sections -->
-                                                    </div>
-                                                    <button class="carousel-control-prev" type="button"
-                                                        data-bs-target="#carouselInformation" data-bs-slide="prev">
-                                                        <span class="carousel-control-prev-icon"
-                                                            aria-hidden="true"></span>
-                                                        <span class="visually-hidden">Previous</span>
-                                                    </button>
-                                                    <button class="carousel-control-next" type="button"
-                                                        data-bs-target="#carouselInformation" data-bs-slide="next">
-                                                        <span class="carousel-control-next-icon"
-                                                            aria-hidden="true"></span>
-                                                        <span class="visually-hidden">Next</span>
-                                                    </button>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
+            <app-weather-widget class="col-12 mb-2" id="weather-panel"></app-weather-widget>
         </div>
     </div>
     <!-- Settings Modal -->
@@ -298,60 +213,7 @@
                             <hr>
                             <h5 class="h5"><i class="bi bi-thermometer-sun"></i> Weather Forecast</h5>
                         </div>
-                        <div class="col-12 col-lg-6 mb-2">
-                            <div class="card">
-                                <div class="card-body">
-                                    <div class="row">
-                                        <div class="col-12 mb-2">
-                                            <h6><i class="bi bi-calendar-day"></i> Daily</h6>
-                                        </div>
-
-                                        <div class="col-12 table-responsive mb-2">
-                                            <table id="hourly-forecast-table" class="table table-borderless">
-                                                <tr>
-                                                    <!-- Content -->
-                                                </tr>
-                                            </table>
-                                        </div>
-
-                                        <div class="col-12 mb-2">
-                                            <h6><i class="bi bi-calendar-week"></i> Weekly</h6>
-                                        </div>
-
-                                        <div id="table" class="col-12 mb-2">
-                                            <table id="daily-forecast-table" class="table table-borderless">
-                                                <thead>
-                                                    <tr>
-                                                        <th><i class="bi bi-calendar-date"></i></th>
-                                                        <th><i class="bi bi-cloud-sun-fill"></i></th>
-                                                        <th><i class="bi bi-thermometer-low"></i></th>
-                                                        <th><i class="bi bi-thermometer-high"></i></th>
-                                                    </tr>
-                                                </thead>
-                                                <tbody>
-                                                    <!-- Content -->
-                                                </tbody>
-                                            </table>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-12 col-lg-6 mb-2">
-                            <div class="card">
-                                <div class="card-body">
-                                    <div class="row">
-                                        <div class="col-12">
-                                            <h6><i class="bi bi-card-text"></i> Summary</h6>
-                                        </div>
-
-                                        <div class="col-12 mb-2" id="weather-summary">
-
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
+                        <app-weather-details class="col-12"></app-weather-details>
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -370,6 +232,7 @@
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
     integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin="anonymous"></script>
 <script src="../../assets/script/js/component.js"></script>
+<script type="module" src="../../assets/script/js/weather-component.js"></script>
 <script type="module" src="../../assets/script/js/script.js"></script>
 
 </html>
