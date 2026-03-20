@@ -176,3 +176,72 @@ progress::-webkit-progress-value {
     font-size: 6vh;
     color: rgba(0, 0, 255, 0.75);
 }
+
+
+/* Enhancement app-window */
+.app-window-body {
+    position: relative;
+    flex-grow: 1;
+}
+
+.iframe-overlay {
+    position: absolute;
+    top: 0; left: 0; width: 100%; height: 100%;
+    display: none;
+    z-index: 10;
+}
+
+/* Fix Maximize agar menutupi seluruh layar */
+.app-window-instance.is-maximized {
+    border-radius: 0 !important;
+}
+.app-window-instance.is-maximized .app-window {
+    border-radius: 0 !important;
+    border: none !important;
+}
+
+/* Hitbox Resizer Disesuaikan (Lebih tebal agar mudah ditarik) */
+.resizer {
+    position: absolute;
+    z-index: 20;
+}
+
+/* Sisi - Ketebalan 10px menjorok 5px ke luar dan 5px ke dalam */
+.resizer.t { top: -5px; left: 0; width: 100%; height: 10px; cursor: n-resize; }
+.resizer.b { bottom: -5px; left: 0; width: 100%; height: 10px; cursor: s-resize; }
+.resizer.l { top: 0; left: -5px; width: 10px; height: 100%; cursor: w-resize; }
+.resizer.r { top: 0; right: -5px; width: 10px; height: 100%; cursor: e-resize; }
+
+/* Pojok - Ketebalan 15px */
+.resizer.tl { top: -5px; left: -5px; width: 15px; height: 15px; cursor: nw-resize; }
+.resizer.tr { top: -5px; right: -5px; width: 15px; height: 15px; cursor: ne-resize; }
+.resizer.bl { bottom: -5px; left: -5px; width: 15px; height: 15px; cursor: sw-resize; }
+.resizer.br { bottom: -5px; right: -5px; width: 15px; height: 15px; cursor: se-resize; }
+
+/* Taskbar Area */
+#app-taskbar {
+    position: fixed;
+    bottom: 10px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 10px;
+    z-index: 2000;
+    padding: 5px 15px;
+    background: var(--bg-overlay);
+    backdrop-filter: blur(10px);
+    border-radius: 20px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.taskbar-item {
+    cursor: pointer;
+    padding: 5px 15px;
+    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.1);
+    color: var(--text-color);
+    font-size: 0.8rem;
+    transition: 0.3s;
+}
+
+.taskbar-item:hover { background: rgba(255, 255, 255, 0.2); }

@@ -219,6 +219,191 @@ class AppMap extends HTMLElement {
     }
 }
 
+class AppWindow extends HTMLElement {
+    constructor() {
+        super();
+        this._isDragging = false;
+        this._isResizing = false;
+        this._isMaximized = false;
+        this._currentResizer = null;
+        this._preMaxState = {};
+        this._offset = { x: 0, y: 0 };
+    }
+
+    connectedCallback() {
+        const title = this.getAttribute('title') || 'Window';
+        const url = this.getAttribute('url');
+        
+        // 1. Tangkap potongan HTML bawaan jika ada (sebelum ditimpa)
+        const htmlSnippet = this.innerHTML; 
+        
+        this.style.position = 'fixed';
+        this.style.zIndex = '1050';
+        this.style.display = 'block';
+        this.style.boxSizing = 'border-box';
+        this.classList.add('app-window-instance');
+
+        // 2. Logika Penentuan Konten (Iframe atau HTML Snippet)
+        const windowContent = url 
+            ? `<iframe src="${url}" frameborder="0" style="width:100%; height:100%; border:none;"></iframe>` 
+            : htmlSnippet;
+
+        this.innerHTML = `
+            <div class="app-window shadow-lg" style="width: 100%; height: 100%; border-radius: 12px; overflow: hidden; display: flex; flex-direction: column;">
+                <div class="app-window-header d-flex justify-content-between align-items-center p-2">
+                    <div class="app-window-title ps-2 text-truncate">
+                        <i class="bi bi-window-stack me-1"></i> ${title}
+                    </div>
+                    <div class="app-window-controls d-flex">
+                        <button class="btn btn-sm btn-win-ctrl btn-minimize-win"><i class="bi bi-dash-lg"></i></button>
+                        <button class="btn btn-sm btn-win-ctrl btn-maximize-win"><i class="bi bi-app-indicator"></i></button>
+                        <button class="btn btn-sm btn-win-ctrl btn-close-win"><i class="bi bi-x-lg"></i></button>
+                    </div>
+                </div>
+                <div class="app-window-body" style="position: relative; flex-grow: 1; overflow: auto;">
+                    ${windowContent}
+                    <div class="iframe-overlay" style="position: absolute; top:0; left:0; width:100%; height:100%; display:none; z-index:10;"></div>
+                </div>
+            </div>
+            <div class="resizer t"></div><div class="resizer r"></div>
+            <div class="resizer b"></div><div class="resizer l"></div>
+            <div class="resizer tl"></div><div class="resizer tr"></div>
+            <div class="resizer bl"></div><div class="resizer br"></div>
+        `;
+
+        this.initEvents();
+        this._applyInitialSize();
+    }
+
+    _applyInitialSize() {
+        this.style.top = this.getAttribute('y') || '15%';
+        this.style.left = this.getAttribute('x') || '20%';
+        this.style.width = this.getAttribute('width') || '700px';
+        this.style.height = this.getAttribute('height') || '500px';
+    }
+
+    initEvents() {
+        const header = this.querySelector('.app-window-header');
+        const overlay = this.querySelector('.iframe-overlay');
+
+        // --- MOUSE DOWN UNTUK DRAG ---
+        header.addEventListener('mousedown', (e) => {
+            if (e.target.closest('.btn-win-ctrl') || this._isMaximized) return;
+            this._isDragging = true;
+            this._isResizing = false; // Pastikan tidak bertabrakan
+            overlay.style.display = 'block';
+            this._offset = { x: this.offsetLeft - e.clientX, y: this.offsetTop - e.clientY };
+            this.style.zIndex = Math.floor(Date.now() / 1000);
+        });
+
+        // --- MOUSE DOWN UNTUK RESIZE ---
+        this.querySelectorAll('.resizer').forEach(resizer => {
+            resizer.addEventListener('mousedown', (e) => {
+                this._isResizing = true;
+                this._isDragging = false; // Pastikan tidak menggeser saat meresize
+                this._currentResizer = e.target;
+                this._initialRect = this.getBoundingClientRect();
+                this._initialMouse = { x: e.clientX, y: e.clientY };
+                
+                overlay.style.display = 'block';
+                this.style.zIndex = Math.floor(Date.now() / 1000);
+                
+                e.stopPropagation(); // Cegah event bocor ke elemen bawahnya
+                e.preventDefault();
+            });
+        });
+
+        // --- MOUSE MOVE GLOBAL ---
+        document.addEventListener('mousemove', (e) => {
+            if (this._isDragging) {
+                this.style.left = (e.clientX + this._offset.x) + 'px';
+                this.style.top = (e.clientY + this._offset.y) + 'px';
+            } 
+            else if (this._isResizing) {
+                const dx = e.clientX - this._initialMouse.x;
+                const dy = e.clientY - this._initialMouse.y;
+                const r = this._currentResizer.classList;
+
+                let newWidth = this._initialRect.width;
+                let newHeight = this._initialRect.height;
+                let newTop = this._initialRect.top;
+                let newLeft = this._initialRect.left;
+
+                // Batas minimum agar tidak error terbalik
+                const MIN_WIDTH = 300;
+                const MIN_HEIGHT = 200;
+
+                // Hitung Vertikal
+                if (r.contains('t') || r.contains('tl') || r.contains('tr')) {
+                    newHeight = this._initialRect.height - dy;
+                    if (newHeight > MIN_HEIGHT) newTop = this._initialRect.top + dy;
+                }
+                if (r.contains('b') || r.contains('bl') || r.contains('br')) {
+                    newHeight = this._initialRect.height + dy;
+                }
+
+                // Hitung Horizontal
+                if (r.contains('l') || r.contains('tl') || r.contains('bl')) {
+                    newWidth = this._initialRect.width - dx;
+                    if (newWidth > MIN_WIDTH) newLeft = this._initialRect.left + dx;
+                }
+                if (r.contains('r') || r.contains('tr') || r.contains('br')) {
+                    newWidth = this._initialRect.width + dx;
+                }
+
+                // Terapkan Gaya jika valid
+                if (newWidth > MIN_WIDTH) {
+                    this.style.width = newWidth + 'px';
+                    this.style.left = newLeft + 'px';
+                }
+                if (newHeight > MIN_HEIGHT) {
+                    this.style.height = newHeight + 'px';
+                    this.style.top = newTop + 'px';
+                }
+            }
+        });
+
+        // --- MOUSE UP GLOBAL ---
+        document.addEventListener('mouseup', () => {
+            this._isDragging = false;
+            this._isResizing = false;
+            overlay.style.display = 'none';
+        });
+
+        // --- KONTROL TOMBOL ---
+        this.querySelector('.btn-close-win').addEventListener('click', () => {
+            this.remove();
+            if (typeof WindowManager !== "undefined") WindowManager.updateTaskbar();
+        });
+
+        this.querySelector('.btn-maximize-win').addEventListener('click', () => this.toggleMaximize());
+        
+        this.querySelector('.btn-minimize-win').addEventListener('click', () => {
+            this.style.display = 'none';
+            if (typeof WindowManager !== "undefined") WindowManager.updateTaskbar();
+        });
+    }
+
+    toggleMaximize() {
+        if (!this._isMaximized) {
+            this._preMaxState = {
+                top: this.style.top, left: this.style.left,
+                width: this.style.width, height: this.style.height
+            };
+            Object.assign(this.style, {
+                top: '0', left: '0', width: '100%', height: '100%'
+            });
+            this.querySelector('.app-window').style.borderRadius = '0';
+            this._isMaximized = true;
+        } else {
+            Object.assign(this.style, this._preMaxState);
+            this.querySelector('.app-window').style.borderRadius = '12px';
+            this._isMaximized = false;
+        }
+    }
+}
+
+customElements.define('app-window', AppWindow);
 customElements.define('app-map', AppMap);
 customElements.define('app-button', AppButton);
 customElements.define('app-preloader', AppPreloader);

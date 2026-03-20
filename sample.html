@@ -1,0 +1,20 @@
+<div class="p-4" style="color: var(--text-color);">
+    <h4><i class="bi bi-sliders"></i> Display Preferences</h4>
+    <hr>
+    <p>Karena ini adalah potongan HTML yang di-fetch, latar belakang jendela ini benar-benar menyatu dengan background
+        utama (Glass Effect sempurna).</p>
+
+    <div class="form-check form-switch mt-3">
+        <input class="form-check-input" type="checkbox" id="flexSwitchCheckChecked" checked>
+        <label class="form-check-label" for="flexSwitchCheckChecked">Enable Glassmorphism</label>
+    </div>
+    <div class="form-check form-switch mt-2">
+        <input class="form-check-input" type="checkbox" id="switch2">
+        <label class="form-check-label" for="switch2">Auto Refresh Weather</label>
+    </div>
+
+    <button class="btn btn-mica-blue w-100 mt-4"
+        onclick="document.getElementById('win-settings').remove(); WindowManager.updateTaskbar();">
+        Save & Close
+    </button>
+</div>

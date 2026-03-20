@@ -1,18 +1,192 @@
-import { AppConfig } from './config.js';
+import {
+    AppConfig
+} from './config.js';
 
 /**
- * Configuration & Constants
+ * Module: Window Manager (Custom Implementation)
  */
-const CONFIG = {
-    API: {
-        METEO: "https://api.open-meteo.com/v1/forecast",
-        GEOCODE: "https://api.bigdatacloud.net/data/reverse-geocode-client",
-        MAP_TILE: "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+const WindowManager = {
+    init() {
+        if (!document.getElementById('app-taskbar')) {
+            const tb = document.createElement('div');
+            tb.id = 'app-taskbar';
+            document.body.appendChild(tb);
+        }
     },
-    REFRESH_INTERVAL: 15 * 60 * 1000, // 15 Menit
-    DEFAULT_COORDS: {
-        lat: 51.505,
-        lon: -0.09
+
+    // Fungsi Utama Pembuka Jendela
+    openWindow(options) {
+        const { id, title, url, htmlContent, width, height, x, y } = options;
+
+        // Cek jika jendela sudah pernah dibuka (hindari duplikat)
+        let win = id ? document.getElementById(id) : null;
+        if (win) {
+            win.style.display = 'block';
+            win.style.zIndex = Math.floor(Date.now() / 1000);
+            this.updateTaskbar();
+            return;
+        }
+
+        // Buat jendela baru
+        win = document.createElement('app-window');
+        if (id) win.id = id;
+        win.setAttribute('title', title || 'New Window');
+        if (width) win.setAttribute('width', width);
+        if (height) win.setAttribute('height', height);
+        if (x) win.setAttribute('x', x);
+        if (y) win.setAttribute('y', y);
+        
+        // Setel konten
+        if (url) {
+            win.setAttribute('url', url);
+        } else if (htmlContent) {
+            win.innerHTML = htmlContent;
+        }
+
+        document.body.appendChild(win);
+        this.updateTaskbar();
+    },
+
+    // Contoh 1: Membuka File HTML Eksternal (Iframe)
+    // openAbout() {
+    //     this.openWindow({
+    //         id: 'win-about',
+    //         title: 'About Galih Respati',
+    //         url: 'about.html',
+    //         width: '750px',
+    //         height: '550px'
+    //     });
+    // },
+
+    // Contoh 2: Membuka Jendela dari Potongan HTML (Tanpa Iframe)
+    // openSettings() {
+    //     this.openWindow({
+    //         id: 'win-settings',
+    //         title: 'System Settings',
+    //         width: '400px',
+    //         height: '500px',
+    //         htmlContent: `
+    //             <div class="p-4" style="color: var(--text-color);">
+    //                 <h4><i class="bi bi-sliders"></i> Display Preferences</h4>
+    //                 <hr>
+    //                 <p>Karena ini adalah potongan HTML, latar belakang jendela ini benar-benar menyatu dengan background utama (Glass Effect sempurna).</p>
+                    
+    //                 <div class="form-check form-switch mt-3">
+    //                     <input class="form-check-input" type="checkbox" id="flexSwitchCheckChecked" checked>
+    //                     <label class="form-check-label" for="flexSwitchCheckChecked">Enable Glassmorphism</label>
+    //                 </div>
+    //                 <div class="form-check form-switch mt-2">
+    //                     <input class="form-check-input" type="checkbox" id="switch2">
+    //                     <label class="form-check-label" for="switch2">Auto Refresh Weather</label>
+    //                 </div>
+
+    //                 <button class="btn btn-mica-blue w-100 mt-4" onclick="document.getElementById('win-settings').remove(); WindowManager.updateTaskbar();">
+    //                     Save & Close
+    //                 </button>
+    //             </div>
+    //         `
+    //     });
+    // },
+
+    async openAbout() {
+        // Cek dulu apakah jendela sudah ada untuk mencegah fetch berulang
+        let win = document.getElementById('win-about');
+        if (win) {
+            win.style.display = 'block';
+            win.style.zIndex = Math.floor(Date.now() / 1000);
+            this.updateTaskbar();
+            return;
+        }
+
+        try {
+            // 1. Ambil isi file about-window.html
+            // Sesuaikan path ini dengan letak file about-window.html yang kamu buat
+            const response = await fetch('about-window.html'); 
+            
+            if (!response.ok) throw new Error('Gagal memuat file HTML');
+            
+            // 2. Ubah respon menjadi teks HTML
+            const htmlText = await response.text(); 
+
+            // 3. Buka jendela dengan teks HTML yang baru saja diambil
+            this.openWindow({
+                id: 'win-about',
+                title: 'About Galih Respati',
+                width: '750px',
+                height: '550px',
+                htmlContent: htmlText 
+            });
+
+        } catch (error) {
+            console.error("Window Load Error:", error);
+            // Fallback sederhana jika file gagal dimuat
+            this.openWindow({
+                id: 'win-about-error',
+                title: 'Error',
+                width: '300px', height: '200px',
+                htmlContent: `<div class="p-4 text-danger">Gagal memuat jendela About.</div>`
+            });
+        }
+    },
+
+    async openSettings() {
+        // Cek dulu apakah jendela sudah ada untuk mencegah fetch berulang
+        let win = document.getElementById('win-settings');
+        if (win) {
+            win.style.display = 'block';
+            win.style.zIndex = Math.floor(Date.now() / 1000);
+            this.updateTaskbar();
+            return;
+        }
+
+        try {
+            // 1. Ambil isi file settings.html
+            // Sesuaikan path ini dengan letak file settings.html yang kamu buat
+            const response = await fetch('sample.html'); 
+            
+            if (!response.ok) throw new Error('Gagal memuat file HTML');
+            
+            // 2. Ubah respon menjadi teks HTML
+            const htmlText = await response.text(); 
+
+            // 3. Buka jendela dengan teks HTML yang baru saja diambil
+            this.openWindow({
+                id: 'win-settings',
+                title: 'System Settings',
+                width: '400px',
+                height: '500px',
+                htmlContent: htmlText 
+            });
+
+        } catch (error) {
+            console.error("Window Load Error:", error);
+            // Fallback sederhana jika file gagal dimuat
+            this.openWindow({
+                id: 'win-settings-error',
+                title: 'Error',
+                width: '300px', height: '200px',
+                htmlContent: `<div class="p-4 text-danger">Gagal memuat pengaturan.</div>`
+            });
+        }
+    },
+
+    updateTaskbar() {
+        const taskbar = document.getElementById('app-taskbar');
+        const windows = document.querySelectorAll('.app-window-instance');
+        taskbar.innerHTML = '';
+
+        windows.forEach(win => {
+            const item = document.createElement('div');
+            item.className = 'taskbar-item shadow-sm';
+            item.innerHTML = `<i class="bi bi-window me-1"></i> ${win.getAttribute('title')}`;
+            item.onclick = () => {
+                win.style.display = 'block';
+                win.style.zIndex = Math.floor(Date.now() / 1000);
+            };
+            taskbar.appendChild(item);
+        });
+        
+        taskbar.style.display = windows.length > 0 ? 'flex' : 'none';
     }
 };
 
@@ -114,23 +288,34 @@ const UIManager = {
 
     setupEventListeners() {
         const infoModal = document.getElementById('infoModal');
+        const btnAbout = document.getElementById('btnAboutWindow');
+        const btnSettings = document.getElementById('btnSettingsWindow');
+        
+        if (btnAbout) {
+            btnAbout.addEventListener('click', () => WindowManager.openAbout());
+        }
+
+        if (btnSettings) {
+            btnSettings.addEventListener('click', () => WindowManager.openSettings());
+        }
+
         if (infoModal) {
             infoModal.addEventListener('shown.bs.modal', function () {
                 // 1. Ambil data koordinat dari widget
                 const btnWrapper = document.querySelector('app-weather-widget app-button');
                 // 2. Cari komponen peta kita
-                const mapComponent = document.getElementById('infoMaps'); 
-                
+                const mapComponent = document.getElementById('infoMaps');
+
                 if (btnWrapper && mapComponent) {
                     const lat = btnWrapper.getAttribute('data-latitude');
                     const lon = btnWrapper.getAttribute('data-longitude');
-                    
+
                     if (lat && lon) {
                         // KEAJAIBAN WEB COMPONENT: 
                         // Cukup set atributnya, maka peta akan otomatis merender dirinya sendiri!
                         mapComponent.setAttribute('latitude', lat);
                         mapComponent.setAttribute('longitude', lon);
-                        
+
                         // Panggil perbaikan ukuran karena peta muncul dari dalam Modal tersembunyi
                         if (typeof mapComponent.invalidateMapSize === 'function') {
                             mapComponent.invalidateMapSize();
@@ -184,7 +369,7 @@ const WeatherService = {
             const url = `${AppConfig.WEATHER.API_GEOCODE}?latitude=${lat}&longitude=${lon}&localityLanguage=id`;
             const response = await fetch(url);
             if (!response.ok) throw new Error(`Geocode API Error: ${response.status}`);
-            
+
             const data = await response.json();
             const cityName = data.city || data.locality || data.principalSubdivision || 'Lokasi';
             const fullLocation = `${data.locality || ''}, ${data.principalSubdivision || ''}, ${data.countryName || ''}`;
@@ -216,6 +401,8 @@ const WeatherService = {
  */
 const App = {
     init() {
+        window.WindowManager = WindowManager;
+        WindowManager.init();
         UIManager.init();
         this.startGeoTracking();
     },
