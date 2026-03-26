@@ -29,7 +29,7 @@ const WindowManager = {
         let win = id ? document.getElementById(id) : null;
         if (win) {
             win.style.display = 'block';
-            win.style.zIndex = Math.floor(Date.now() / 1000);
+            win.style.zIndex = Date.now();
             this.updateTaskbar();
             return;
         }
@@ -100,7 +100,7 @@ const WindowManager = {
         let win = document.getElementById('win-about');
         if (win) {
             win.style.display = 'block';
-            win.style.zIndex = Math.floor(Date.now() / 1000);
+            win.style.zIndex = Date.now();
             this.updateTaskbar();
             return;
         }
@@ -154,10 +154,18 @@ const WindowManager = {
             const item = document.createElement('div');
             item.className = 'taskbar-item shadow-sm';
             item.innerHTML = `<i class="bi bi-window me-1"></i> ${win.getAttribute('title')}`;
+            
+            // --- LOGIKA RESTORE DARI MINIMIZE ---
             item.onclick = () => {
                 win.style.display = 'block';
-                win.style.zIndex = Math.floor(Date.now() / 1000);
+                win.style.zIndex = Date.now(); 
+                
+                win.style.animation = 'none';
+                win.getBoundingClientRect(); 
+                
+                win.style.animation = null; 
             };
+            
             taskbar.appendChild(item);
         });
         
@@ -169,21 +177,46 @@ const WindowManager = {
  * Module: UI & Theme Manager
  */
 const UIManager = {
-    init() {
+    async init() {
         this.initTheme();
-        this.initDynamicBackground();
         this.initClock();
         this.loadPanelState();
         this.setupEventListeners();
+
+        await this.initDynamicBackground();
     },
 
-    async initDynamicBackground() {
-        try {
-            document.body.style.backgroundImage = `url('${AppConfig.UI.BG_URL}')`;
-        } catch (error) {
-            console.warn("Dynamic Background Error:", error);
-            document.documentElement.style.removeProperty('--text-color');
-        }
+    initDynamicBackground() {
+        // Menggunakan Promise agar fungsi init() mau menunggunya
+        return new Promise((resolve) => {
+            try {
+                const isDark = document.documentElement.getAttribute("data-bs-theme") === "dark";
+                // Anggap AppConfig.UI.BG_URL_DARK/LIGHT sudah diset sesuai modifikasi kita sebelumnya
+                const baseUrl = isDark ? AppConfig.UI.BG_URL_DARK : AppConfig.UI.BG_URL_LIGHT;
+                const bgUrl = `${baseUrl}?lock=${Date.now()}`;
+
+                // TAHAP 2: Buat objek gambar di dalam memori untuk "memancing" unduhan
+                const img = new Image();
+                
+                // Jika unduhan sukses
+                img.onload = () => {
+                    document.body.style.backgroundImage = `url('${bgUrl}')`;
+                    resolve(); // Izinkan aplikasi melanjutkan proses
+                };
+                
+                // Jika unduhan gagal (misal tidak ada internet), tetap jalankan agar tidak freeze
+                img.onerror = () => {
+                    console.warn("Dynamic Background Error: Gambar gagal dimuat.");
+                    resolve(); 
+                };
+                
+                // Mulai mengunduh...
+                img.src = bgUrl;
+            } catch (error) {
+                console.warn("Dynamic Background Error:", error);
+                resolve();
+            }
+        });
     },
 
     applyTextColor(brightness) {
@@ -375,11 +408,12 @@ const WeatherService = {
  * Main App Controller
  */
 const App = {
-    init() {
+    async init() {
         window.WindowManager = WindowManager;
         WindowManager.init();
-        UIManager.init();
+        await UIManager.init();
         this.startGeoTracking();
+        window.dispatchEvent(new Event('app:ready')); // Event khusus jika ingin hook custom behavior setelah app siap
     },
 
     startGeoTracking() {

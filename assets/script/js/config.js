@@ -11,6 +11,8 @@ export const AppConfig = {
 
     UI: {
         BG_URL: 'https://picsum.photos/1920/1080',
+        BG_URL_LIGHT: 'https://loremflickr.com/1920/1080/light,bright,wallpaper/all',
+        BG_URL_DARK: 'https://loremflickr.com/1920/1080/dark,night,wallpaper/all',
         LUMINANCE_THRESHOLD: 128,
         COLOR_DARK: '#000000',
         COLOR_LIGHT: '#ffffff'

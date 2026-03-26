@@ -13,36 +13,31 @@ class AppPreloader extends HTMLElement {
     }
     
     initLogic() {
-        const bar = this.querySelector('#loading-bar');
-        let progress = 0;
-        let interval;
+        this.bar = this.querySelector('#loading-bar');
+        this.progress = 0;
 
-        const hidePreloader = () => {
-            if (interval) clearInterval(interval);
-            if (bar) bar.value = 100;
-            
-            setTimeout(() => {
-                this.classList.add('preload-hidden');
-                setTimeout(() => {
-                    this.style.display = 'none';
-                }, AppPreloader.CONFIG.FADE_OUT_DURATION_MS); 
-            }, AppPreloader.CONFIG.DELAY_BEFORE_CLOSE_MS); 
-        };
-
-        if (bar) {
-            interval = setInterval(() => {
-                if (progress < AppPreloader.CONFIG.MAX_FAKE_PROGRESS) {
-                    progress++;
-                    bar.value = progress;
+        if (this.bar) {
+            this.interval = setInterval(() => {
+                if (this.progress < AppPreloader.CONFIG.MAX_FAKE_PROGRESS) {
+                    this.progress++;
+                    this.bar.value = this.progress;
                 }
             }, AppPreloader.CONFIG.ANIMATION_SPEED_MS);
         }
 
-        if (document.readyState === 'complete') {
-            hidePreloader();
-        } else {
-            window.addEventListener('load', hidePreloader);
-        }
+        window.addEventListener('app:ready', () => this.hide());
+    }
+
+    hide() {
+        if (this.interval) clearInterval(this.interval);
+        if (this.bar) this.bar.value = 100;
+        
+        setTimeout(() => {
+            this.classList.add('preload-hidden');
+            setTimeout(() => {
+                this.style.display = 'none';
+            }, AppPreloader.CONFIG.FADE_OUT_DURATION_MS); 
+        }, AppPreloader.CONFIG.DELAY_BEFORE_CLOSE_MS); 
     }
 }
 
@@ -243,20 +238,25 @@ class AppWindow extends HTMLElement {
     connectedCallback() {
         const title = this.getAttribute('title') || 'Window';
         const url = this.getAttribute('url');
-        
-        // 1. Tangkap potongan HTML bawaan jika ada (sebelum ditimpa)
         const htmlSnippet = this.innerHTML; 
         
         this.style.position = 'fixed';
-        this.style.zIndex = '1050';
+        // FIX Z-INDEX: Gunakan Date.now() milidetik agar selalu di tumpukan paling atas saat baru dibuat
+        this.style.zIndex = Date.now(); 
         this.style.display = 'block';
         this.style.boxSizing = 'border-box';
         this.classList.add('app-window-instance');
 
-        // 2. Logika Penentuan Konten (Iframe atau HTML Snippet)
         const windowContent = url 
-            ? `<iframe src="${url}" frameborder="0" style="width:100%; height:100%; border:none;"></iframe>` 
+            ? `<iframe src="${url}" frameborder="0" style="width:100%; height:100%; border:none; display:block;"></iframe>` 
             : htmlSnippet;
+
+        const bodyOverflow = url ? 'hidden' : 'auto';
+
+        // FITUR BARU: Tombol Refresh hanya dirender jika jendela ini memuat URL (Iframe)
+        const refreshBtnHTML = url 
+            ? `<button class="btn btn-sm btn-win-ctrl btn-refresh-win" title="Refresh Halaman"><i class="bi bi-arrow-clockwise"></i></button>` 
+            : '';
 
         this.innerHTML = `
             <div class="app-window shadow-lg" style="width: 100%; height: 100%; border-radius: 12px; overflow: hidden; display: flex; flex-direction: column;">
@@ -265,12 +265,12 @@ class AppWindow extends HTMLElement {
                         <i class="bi bi-window-stack me-1"></i> ${title}
                     </div>
                     <div class="app-window-controls d-flex">
-                        <button class="btn btn-sm btn-win-ctrl btn-minimize-win"><i class="bi bi-dash-lg"></i></button>
-                        <button class="btn btn-sm btn-win-ctrl btn-maximize-win"><i class="bi bi-app-indicator"></i></button>
-                        <button class="btn btn-sm btn-win-ctrl btn-close-win"><i class="bi bi-x-lg"></i></button>
+                        ${refreshBtnHTML} <button class="btn btn-sm btn-win-ctrl btn-minimize-win" title="Minimize"><i class="bi bi-dash-lg"></i></button>
+                        <button class="btn btn-sm btn-win-ctrl btn-maximize-win" title="Maximize"><i class="bi bi-app-indicator"></i></button>
+                        <button class="btn btn-sm btn-win-ctrl btn-close-win" title="Close"><i class="bi bi-x-lg"></i></button>
                     </div>
                 </div>
-                <div class="app-window-body" style="position: relative; flex-grow: 1; overflow: auto;">
+                <div class="app-window-body" style="position: relative; flex-grow: 1; overflow: ${bodyOverflow};">
                     ${windowContent}
                     <div class="iframe-overlay" style="position: absolute; top:0; left:0; width:100%; height:100%; display:none; z-index:10;"></div>
                 </div>
@@ -284,12 +284,42 @@ class AppWindow extends HTMLElement {
         this.initEvents();
         this._applyInitialSize();
 
-        if (window.innerWidth <= 768) {
-            setTimeout(() => {
-                if (!this._isMaximized) {
-                    this.toggleMaximize();
+        const windowContainer = this.querySelector('.app-window');
+        this._resizeObserver = new ResizeObserver(entries => {
+            for (let entry of entries) {
+                if (entry.contentRect.width < 768) {
+                    windowContainer.classList.add('compact-mode');
+                } else {
+                    windowContainer.classList.remove('compact-mode');
                 }
-            }, 50);
+            }
+        });
+        this._resizeObserver.observe(windowContainer);
+
+        if (window.innerWidth <= 768) {
+            // Simpan ukuran awal (seandainya user HP memutar layar menjadi landscape dan ingin me-restore)
+            this._preMaxState = {
+                top: this.style.top, 
+                left: this.style.left,
+                width: this.style.width, 
+                height: this.style.height
+            };
+            
+            // Ubah ukuran menjadi 100% SECARA INSTAN (Tanpa memicu class .window-animating)
+            Object.assign(this.style, {
+                top: '0', 
+                left: '0', 
+                width: '100%', 
+                height: '100%'
+            });
+            windowContainer.style.borderRadius = '0';
+            this._isMaximized = true;
+        }
+    }
+
+    disconnectedCallback() {
+        if (this._resizeObserver) {
+            this._resizeObserver.disconnect();
         }
     }
 
@@ -310,16 +340,41 @@ class AppWindow extends HTMLElement {
             y: e.touches ? e.touches[0].clientY : e.clientY
         });
 
+        // FUNGSI BARU: Refresh Jendela
+        const btnRefresh = this.querySelector('.btn-refresh-win');
+        if (btnRefresh) {
+            btnRefresh.addEventListener('click', () => {
+                const iframe = this.querySelector('iframe');
+                if (iframe) {
+                    try {
+                        // Coba reload lokasi iframe (Bekerja untuk file internal)
+                        iframe.contentWindow.location.reload();
+                    } catch (err) {
+                        // Fallback jika terkena blokir CORS (Bekerja untuk website eksternal)
+                        iframe.src = iframe.src;
+                    }
+                }
+            });
+        }
+
+        this.querySelector('.btn-close-win').addEventListener('click', () => {
+            this.remove();
+            if (typeof WindowManager !== "undefined") WindowManager.updateTaskbar();
+        });
+
         // --- FUNGSI DRAG START ---
         const startDrag = (e) => {
             if (e.target.closest('.btn-win-ctrl') || this._isMaximized) return;
             this._isDragging = true;
             this._isResizing = false; 
             overlay.style.display = 'block';
+
+            // --- MATIKAN TRANSISI SAAT DRAG ---
+            this.classList.remove('window-animating');
             
             const pos = getPos(e);
             this._offset = { x: this.offsetLeft - pos.x, y: this.offsetTop - pos.y };
-            this.style.zIndex = Math.floor(Date.now() / 1000);
+            this.style.zIndex = Date.now(); // FIX Z-INDEX
         };
 
         // --- FUNGSI RESIZE START ---
@@ -328,16 +383,54 @@ class AppWindow extends HTMLElement {
             this._isDragging = false; 
             this._currentResizer = target;
             this._initialRect = this.getBoundingClientRect();
+
+            // --- MATIKAN TRANSISI SAAT DRAG ---
+            this.classList.remove('window-animating');
             
             const pos = getPos(e);
             this._initialMouse = { x: pos.x, y: pos.y };
             
             overlay.style.display = 'block';
-            this.style.zIndex = Math.floor(Date.now() / 1000);
+            this.style.zIndex = Date.now(); // FIX Z-INDEX
             
             e.stopPropagation(); 
-            // Hanya prevent default pada mouse untuk menghindari layar ponsel 'nge-freeze' saat disentuh
             if (e.type === 'mousedown') e.preventDefault(); 
+        };
+
+        const calculateResize = (pos) => {
+            const dx = pos.x - this._initialMouse.x;
+            const dy = pos.y - this._initialMouse.y;
+            const r = this._currentResizer.classList;
+            const MIN = { W: 250, H: 150 };
+
+            let state = { 
+                w: this._initialRect.width, h: this._initialRect.height,
+                t: this._initialRect.top, l: this._initialRect.left 
+            };
+
+            if (r.contains('t') || r.contains('tl') || r.contains('tr')) {
+                state.h = this._initialRect.height - dy;
+                if (state.h > MIN.H) state.t = this._initialRect.top + dy;
+            }
+            if (r.contains('b') || r.contains('bl') || r.contains('br')) {
+                state.h = this._initialRect.height + dy;
+            }
+            if (r.contains('l') || r.contains('tl') || r.contains('bl')) {
+                state.w = this._initialRect.width - dx;
+                if (state.w > MIN.W) state.l = this._initialRect.left + dx;
+            }
+            if (r.contains('r') || r.contains('tr') || r.contains('br')) {
+                state.w = this._initialRect.width + dx;
+            }
+
+            if (state.w > MIN.W) {
+                this.style.width = state.w + 'px';
+                this.style.left = state.l + 'px';
+            }
+            if (state.h > MIN.H) {
+                this.style.height = state.h + 'px';
+                this.style.top = state.t + 'px';
+            }
         };
 
         // BINDING EVENT START (Desktop & Mobile)
@@ -362,48 +455,8 @@ class AppWindow extends HTMLElement {
             if (this._isDragging) {
                 this.style.left = (pos.x + this._offset.x) + 'px';
                 this.style.top = (pos.y + this._offset.y) + 'px';
-            } 
-            // Logika Resizing
-            else if (this._isResizing) {
-                const dx = pos.x - this._initialMouse.x;
-                const dy = pos.y - this._initialMouse.y;
-                const r = this._currentResizer.classList;
-
-                let newWidth = this._initialRect.width;
-                let newHeight = this._initialRect.height;
-                let newTop = this._initialRect.top;
-                let newLeft = this._initialRect.left;
-
-                // Batas ukuran minimal (diperkecil untuk layar HP)
-                const MIN_WIDTH = 250;
-                const MIN_HEIGHT = 150;
-
-                // Hitung Vertikal
-                if (r.contains('t') || r.contains('tl') || r.contains('tr')) {
-                    newHeight = this._initialRect.height - dy;
-                    if (newHeight > MIN_HEIGHT) newTop = this._initialRect.top + dy;
-                }
-                if (r.contains('b') || r.contains('bl') || r.contains('br')) {
-                    newHeight = this._initialRect.height + dy;
-                }
-
-                // Hitung Horizontal
-                if (r.contains('l') || r.contains('tl') || r.contains('bl')) {
-                    newWidth = this._initialRect.width - dx;
-                    if (newWidth > MIN_WIDTH) newLeft = this._initialRect.left + dx;
-                }
-                if (r.contains('r') || r.contains('tr') || r.contains('br')) {
-                    newWidth = this._initialRect.width + dx;
-                }
-
-                if (newWidth > MIN_WIDTH) {
-                    this.style.width = newWidth + 'px';
-                    this.style.left = newLeft + 'px';
-                }
-                if (newHeight > MIN_HEIGHT) {
-                    this.style.height = newHeight + 'px';
-                    this.style.top = newTop + 'px';
-                }
+            } else if (this._isResizing) {
+                calculateResize(pos);
             }
         };
 
@@ -425,19 +478,116 @@ class AppWindow extends HTMLElement {
 
         // --- KONTROL TOMBOL ---
         this.querySelector('.btn-close-win').addEventListener('click', () => {
-            this.remove();
-            if (typeof WindowManager !== "undefined") WindowManager.updateTaskbar();
+            this.classList.add('is-closing'); // Picu animasi CSS
+            
+            // Tunggu animasi 200ms selesai, baru hapus dari DOM
+            setTimeout(() => {
+                this.remove();
+                if (typeof WindowManager !== "undefined") WindowManager.updateTaskbar();
+            }, 200); 
         });
 
         this.querySelector('.btn-maximize-win').addEventListener('click', () => this.toggleMaximize());
         
         this.querySelector('.btn-minimize-win').addEventListener('click', () => {
-            this.style.display = 'none';
-            if (typeof WindowManager !== "undefined") WindowManager.updateTaskbar();
+            this.classList.add('is-minimizing'); // Picu animasi CSS
+            
+            // Tunggu animasi 200ms selesai, baru sembunyikan
+            setTimeout(() => {
+                this.style.display = 'none';
+                this.classList.remove('is-minimizing'); // Bersihkan state untuk nanti di-restore
+                if (typeof WindowManager !== "undefined") WindowManager.updateTaskbar();
+            }, 200);
         });
+
+        // ==========================================
+        // FITUR BARU: LINK INTERCEPTOR (Buka Link di Window Baru)
+        // ==========================================
+        const iframe = this.querySelector('iframe');
+        
+        // FUNGSI HELPER: Untuk mengeksekusi pembukaan window baru
+        const openLinkInNewWindow = (e, targetLink) => {
+            // Abaikan jika href kosong, berupa anchor (#), atau javascript:void
+            const href = targetLink.getAttribute('href');
+            if (!href || href.startsWith('#') || href.startsWith('javascript:')) return;
+
+            e.preventDefault(); // Cegah browser berpindah halaman
+
+            // Buat ID unik untuk jendela baru
+            const uniqueId = 'win-' + Math.random().toString(36).substr(2, 9);
+            
+            // Panggil WindowManager global untuk membuka jendela baru
+            if (window.WindowManager) {
+                window.WindowManager.openWindow({
+                    id: uniqueId,
+                    title: targetLink.innerText || 'Linked Window',
+                    url: targetLink.href, // Gunakan URL absolut dari tautan
+                    width: '800px',
+                    height: '600px',
+                    // Efek cascade (jendela baru sedikit bergeser dari jendela lama)
+                    x: (parseInt(this.style.left || 0) + 30) + 'px',
+                    y: (parseInt(this.style.top || 0) + 30) + 'px'
+                });
+            }
+        };
+
+        // KASUS 1: Jika konten adalah Potongan HTML (Tanpa Iframe)
+        const body = this.querySelector('.app-window-body');
+        body.addEventListener('click', (e) => {
+            // Cari apakah elemen yang diklik (atau parent-nya) adalah tag <a>
+            const link = e.target.closest('a');
+            if (link) {
+                openLinkInNewWindow(e, link);
+            }
+        });
+
+        // KASUS 2: Jika konten adalah Iframe (File lokal / Same-Origin)
+        if (iframe) {
+            iframe.addEventListener('load', () => {
+                try {
+                    // Coba akses dokumen di dalam iframe
+                    const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
+                    
+                    // ==========================================
+                    // FITUR BARU: UPDATE TITLE DARI HALAMAN TUJUAN
+                    // ==========================================
+                    if (iframeDoc && iframeDoc.title) {
+                        const actualTitle = iframeDoc.title;
+                        
+                        // 1. Update atribut title pada komponen
+                        this.setAttribute('title', actualTitle); 
+                        
+                        // 2. Update teks di Header Jendela
+                        const titleEl = this.querySelector('.app-window-title');
+                        if (titleEl) {
+                            titleEl.innerHTML = `<i class="bi bi-window-stack me-1"></i> ${actualTitle}`;
+                        }
+                        
+                        // 3. Perbarui Taskbar agar nama baru muncul di bawah layar
+                        if (window.WindowManager) {
+                            window.WindowManager.updateTaskbar();
+                        }
+                    }
+
+                    // Pasang event listener click di dalam dokumen iframe (Untuk link berantai)
+                    iframeDoc.addEventListener('click', (e) => {
+                        const link = e.target.closest('a');
+                        if (link) {
+                            openLinkInNewWindow(e, link);
+                        }
+                    });
+                } catch (error) {
+                    // Akan masuk ke sini jika Iframe adalah web luar (Cross-Origin).
+                    // Secara diam-diam diabaikan karena dicegah oleh keamanan Browser.
+                    console.log("Info: Auto-Title & Link interception tidak didukung untuk web eksternal (CORS).");
+                }
+            });
+        }
     }
 
     toggleMaximize() {
+        this.classList.add('window-animating'); 
+
         if (!this._isMaximized) {
             this._preMaxState = {
                 top: this.style.top, left: this.style.left,

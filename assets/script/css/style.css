@@ -19,8 +19,20 @@
 }
 
 /* Base Styles */
+html, body {
+    width: 100vw;
+    height: 100vh;
+    margin: 0;
+    padding: 0;
+    overflow: hidden !important; /* KUNCI: Matikan semua scroll bawaan browser */
+    position: relative;
+}
+
 body {
     background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-attachment: fixed;
     display: flex;
     min-height: 100vh;
     flex-direction: column;
@@ -28,6 +40,15 @@ body {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     background-color: var(--bg-overlay);
     /* Fallback */
+}
+
+.desktop-area {
+    width: 100%;
+    /* Sisakan ruang di bawah agar konten tidak tertutup taskbar (misal tinggi taskbar ~60px) */
+    height: calc(100vh - 70px); 
+    overflow-y: auto; /* Jika widget sangat banyak, area desktop saja yang bisa discroll */
+    overflow-x: hidden;
+    padding-bottom: 20px;
 }
 
 /* Component: Card (Unified) */
@@ -195,7 +216,7 @@ progress::-webkit-progress-value {
     flex-direction: column;
     height: 100%;
     /* Animasi transisi saat ganti tema */
-    transition: background-color 0.3s ease, border-color 0.3s ease;
+    transition: border-radius 0.3s ease, background-color 0.3s ease, border-color 0.3s ease;
 }
 
 /* 2. Base Styling Header */
@@ -362,4 +383,62 @@ progress::-webkit-progress-value {
     background-color: rgba(255, 255, 255, 0.25); /* Lebih terang saat di-hover */
     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
     transform: translateY(-2px); /* Efek melayang */
+}
+
+/* =========================================
+   APP WINDOW COMPACT MODE (Responsive Fix)
+   ========================================= */
+/* Memaksa elemen Bootstrap Column menjadi 100% jika jendela berukuran kecil */
+.app-window.compact-mode [class*="col-"] {
+    flex: 0 0 100% !important;
+    max-width: 100% !important;
+}
+
+/* Memperbaiki jarak elemen gambar di about.html saat tertumpuk */
+.app-window.compact-mode .mb-md-0 {
+    margin-bottom: 1rem !important;
+}
+
+/* Menyembunyikan elemen yang seharusnya hilang di mobile */
+.app-window.compact-mode .d-md-block,
+.app-window.compact-mode .d-lg-block {
+    display: none !important;
+}
+
+/* =========================================
+   WINDOW ANIMATIONS (MOTION UI)
+   ========================================= */
+
+/* Animasi saat Window Pertama Kali Dibuka (Membesar & Memantul Tipis) */
+@keyframes window-open {
+    0% { opacity: 0; transform: scale(0.9) translateY(20px); }
+    100% { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+/* Animasi saat Window Ditutup / Di-Minimize (Mengecil & Pudar) */
+@keyframes window-close {
+    0% { opacity: 1; transform: scale(1) translateY(0); }
+    100% { opacity: 0; transform: scale(0.95) translateY(10px); }
+}
+
+/* Terapkan animasi open secara default pada window baru */
+.app-window-instance {
+    transform-origin: center center;
+    animation: window-open 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+    will-change: transform, opacity, top, left, width, height;
+}
+
+/* Class untuk mentrigger animasi close/minimize via JS */
+.app-window-instance.is-closing,
+.app-window-instance.is-minimizing {
+    animation: window-close 0.2s ease-in forwards !important;
+}
+
+/* Class khusus untuk transisi halus saat Maximize / Restore.
+   Catatan: Class ini HARUS DICOPOT saat drag/resize agar tidak lag. */
+.window-animating {
+    transition: top 0.3s cubic-bezier(0.25, 0.8, 0.25, 1), 
+                left 0.3s cubic-bezier(0.25, 0.8, 0.25, 1), 
+                width 0.3s cubic-bezier(0.25, 0.8, 0.25, 1), 
+                height 0.3s cubic-bezier(0.25, 0.8, 0.25, 1) !important;
 }
