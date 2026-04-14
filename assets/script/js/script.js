@@ -145,6 +145,40 @@ const WindowManager = {
         });
     },
 
+    async openQRGenerator() {
+        let win = document.getElementById('win-qr-gen');
+        if (win) {
+            win.style.display = 'block';
+            win.style.zIndex = Date.now();
+            this.updateTaskbar();
+            return;
+        }
+
+        try {
+            const response = await fetch('/project/qr-code-generator/index.html'); 
+            if (!response.ok) throw new Error('Gagal memuat UI QR Generator');
+            const htmlText = await response.text(); 
+
+            this.openWindow({
+                id: 'win-qr-gen',
+                title: 'QR Code Generator',
+                width: '450px', // Lebar dibuat memanjang ke bawah (mirip HP)
+                height: '750px',
+                htmlContent: htmlText 
+            });
+
+            // Panggil file JS khusus untuk menginisialisasi logika QR-nya (Kita akan buat ini selanjutnya)
+            setTimeout(() => {
+                if (typeof QRGeneratorLogic !== 'undefined') {
+                    QRGeneratorLogic.init();
+                }
+            }, 100);
+
+        } catch (error) {
+            console.error("Window Load Error:", error);
+        }
+    },
+
     updateTaskbar() {
         const taskbar = document.getElementById('app-taskbar');
         const windows = document.querySelectorAll('.app-window-instance');

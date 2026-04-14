@@ -442,3 +442,18 @@ progress::-webkit-progress-value {
                 width 0.3s cubic-bezier(0.25, 0.8, 0.25, 1), 
                 height 0.3s cubic-bezier(0.25, 0.8, 0.25, 1) !important;
 }
+
+/* =========================================
+   QR CODE GENERATOR RESPONSIVE FIX
+   ========================================= */
+/* Targetkan langsung ke elemen buatan pustaka qr-code-styling */
+#qr-canvas-container > *,
+#qr-canvas-container svg,
+#qr-canvas-container canvas {
+    max-width: 100% !important;
+    max-height: 100% !important;
+    width: auto !important;   /* Membiarkan browser menghitung lebar proporsional */
+    height: auto !important;  /* Membiarkan browser menghitung tinggi proporsional */
+    display: block !important;
+    margin: auto !important;  /* Paksa ke tengah (Fallback) */
+}

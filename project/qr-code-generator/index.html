@@ -1,0 +1,114 @@
+<div class="p-3" style="color: var(--text-color);">
+    <h4 class="mb-4"><i class="bi bi-qr-code"></i> Custom QR Generator</h4>
+
+    <div class="row g-4">
+        <div class="col-lg-7">
+            <div class="card h-auto mb-3 shadow-sm border-0 bg-opacity-10">
+                <div class="card-body">
+                    <h6 class="card-title fw-bold"><i class="bi bi-input-cursor-text"></i> Data QR Code</h6>
+                    <div class="mb-3">
+                        <label class="form-label small">Tipe Konten</label>
+                        <select id="qr-type" class="form-select form-select-sm input-mica">
+                            <option value="url">Tautan (URL)</option>
+                            <option value="text">Teks Bebas</option>
+                            <option value="email">Kirim Email</option>
+                            <option value="wifi">Koneksi Wi-Fi</option>
+                        </select>
+                    </div>
+
+                    <div id="qr-dynamic-inputs" class="mb-3">
+                        <label class="form-label small">Masukkan Tautan URL</label>
+                        <input type="url" id="qr-input-url" class="form-control form-control-sm input-mica"
+                            value="https://authntcg.github.io">
+                    </div>
+
+                    <div>
+                        <label class="form-label small text-muted">Data Mentah Output</label>
+                        <textarea id="qr-raw-data" class="form-control form-control-sm input-mica" rows="2" readonly
+                            style="font-family: monospace; font-size: 0.8rem;"></textarea>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card h-auto mb-3 shadow-sm border-0 bg-opacity-10">
+                <div class="card-body">
+                    <h6 class="card-title fw-bold"><i class="bi bi-sliders"></i> Opsi Utama</h6>
+                    <div class="mb-2">
+                        <label class="form-label small">Ukuran QR: <span id="qr-size-val">300</span>px</label>
+                        <input type="range" class="form-range" id="qr-size" min="200" max="500" step="10" value="300">
+                    </div>
+                    <div class="mb-1">
+                        <label class="form-label small">Margin: <span id="qr-margin-val">10</span>px</label>
+                        <input type="range" class="form-range" id="qr-margin" min="0" max="50" step="5" value="10">
+                    </div>
+                </div>
+            </div>
+
+            <div class="card h-auto mb-3 shadow-sm border-0 bg-opacity-10">
+                <div class="card-body">
+                    <h6 class="card-title fw-bold"><i class="bi bi-palette"></i> Desain Visual</h6>
+                    <label class="form-label small fw-bold">Pola Titik (Dots)</label>
+                    <div class="row g-2 mb-3">
+                        <div class="col-8">
+                            <select id="qr-dots-type" class="form-select form-select-sm input-mica">
+                                <option value="square">Kotak</option>
+                                <option value="rounded" selected>Bulat</option>
+                                <option value="dots">Titik</option>
+                                <option value="classy">Classy</option>
+                            </select>
+                        </div>
+                        <div class="col-4"><input type="color" id="qr-dots-color"
+                                class="form-control form-control-sm h-100" value="#000000"></div>
+                    </div>
+
+                    <label class="form-label small fw-bold">Sudut (Corners)</label>
+                    <div class="row g-2 mb-2">
+                        <div class="col-8">
+                            <select id="qr-corner-type" class="form-select form-select-sm input-mica">
+                                <option value="square">Kotak</option>
+                                <option value="extra-rounded" selected>Extra Bulat</option>
+                            </select>
+                        </div>
+                        <div class="col-4"><input type="color" id="qr-corner-color"
+                                class="form-control form-control-sm h-100" value="#000000"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card h-auto mb-4 shadow-sm border-0 bg-opacity-10">
+                <div class="card-body">
+                    <h6 class="card-title fw-bold"><i class="bi bi-image"></i> Logo</h6>
+                    <input type="file" id="qr-logo-file" accept="image/png, image/jpeg, image/svg+xml" class="form-control form-control-sm input-mica mb-2">
+                    <label class="form-label small">Skala Logo: <span id="qr-logo-size-val">0.4</span></label>
+                    <input type="range" class="form-range" id="qr-logo-size" min="0.1" max="0.4" step="0.05" value="0.3">
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-5">
+            <div class="sticky-lg-top" style="top: 10px; z-index: 1;">
+                <div class="card h-auto shadow-sm border-0 bg-opacity-10 text-center">
+                    <div class="card-body">
+                        <h6 class="fw-bold mb-3"><i class="bi bi-eye"></i> Pratinjau QR</h6>
+
+                        <div id="qr-canvas-container"
+                            class="bg-white p-2 rounded shadow-sm mx-auto mb-4 d-flex justify-content-center align-items-center"
+                            style="width: 100%; max-width: 280px; aspect-ratio: 1 / 1; overflow: hidden;">
+                        </div>
+
+                        <div class="input-group">
+                            <select id="qr-download-ext" class="form-select input-mica" style="max-width: 90px;">
+                                <option value="png">PNG</option>
+                                <option value="jpeg">JPG</option>
+                                <option value="svg">SVG</option>
+                            </select>
+                            <button class="btn btn-primary flex-grow-1" id="btn-download-qr">
+                                <i class="bi bi-download me-1"></i> Unduh
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

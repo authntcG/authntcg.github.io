@@ -351,7 +351,8 @@ class AppWindow extends HTMLElement {
                         iframe.contentWindow.location.reload();
                     } catch (err) {
                         // Fallback jika terkena blokir CORS (Bekerja untuk website eksternal)
-                        iframe.src = iframe.src;
+                        const currentSrc = iframe.getAttribute('src');
+                        iframe.setAttribute('src', currentSrc);
                     }
                 }
             });
