@@ -155,19 +155,29 @@ const WindowManager = {
         }
 
         try {
-            const response = await fetch('/project/qr-code-generator/index.html'); 
+            // Perbaikan URL: Menggunakan relative path agar aman jika dihosting di Github Pages
+            const response = await fetch('project/qr-code-generator/index.html'); 
             if (!response.ok) throw new Error('Gagal memuat UI QR Generator');
+            
             const htmlText = await response.text(); 
+
+            // THE MAGIC: Bedah HTML yang diterima
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(htmlText, 'text/html');
+            
+            // Ekstrak HANYA bagian inti aplikasinya (Abaikan <body>, tombol Back, dan <script> luar)
+            const contentDiv = doc.getElementById('qr-app-content');
+            const finalHtml = contentDiv ? contentDiv.innerHTML : htmlText;
 
             this.openWindow({
                 id: 'win-qr-gen',
                 title: 'QR Code Generator',
-                width: '450px', // Lebar dibuat memanjang ke bawah (mirip HP)
+                width: '450px',
                 height: '750px',
-                htmlContent: htmlText 
+                htmlContent: finalHtml 
             });
 
-            // Panggil file JS khusus untuk menginisialisasi logika QR-nya (Kita akan buat ini selanjutnya)
+            // Trigger Logikanya
             setTimeout(() => {
                 if (typeof QRGeneratorLogic !== 'undefined') {
                     QRGeneratorLogic.init();

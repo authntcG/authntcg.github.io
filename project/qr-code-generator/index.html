@@ -1,150 +1,207 @@
-<div class="p-3" style="color: var(--text-color);">
-    <h4 class="mb-4"><i class="bi bi-qr-code"></i> Custom QR Generator</h4>
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="auto">
 
-    <div class="row g-4">
-        <div class="col-lg-7">
-            <div class="card h-auto mb-3 shadow-sm border-0 bg-opacity-10">
-                <div class="card-body">
-                    <h6 class="card-title fw-bold"><i class="bi bi-input-cursor-text"></i> Data QR Code</h6>
-                    <div class="mb-3">
-                        <label class="form-label small">Tipe Konten</label>
-                        <select id="qr-type" class="form-select form-select-sm input-mica">
-                            <option value="url">Tautan (URL)</option>
-                            <option value="text">Teks Bebas</option>
-                            <option value="email">Kirim Email</option>
-                            <option value="wifi">Koneksi Wi-Fi</option>
-                        </select>
-                    </div>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QR Code Generator | AuthntcG</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link rel="stylesheet" href="../../assets/script/css/style.css">
+    <style>
+        /* Memaksa browser mengizinkan scroll dan menyesuaikan tinggi khusus di halaman ini */
+        html, body {
+            overflow-y: auto !important;
+            overflow-x: hidden !important;
+            height: auto !important;
+            min-height: 100vh;
+        }
+    </style>
+</head>
 
-                    <div id="qr-dynamic-inputs" class="mb-3">
-                        <label class="form-label small">Masukkan Tautan URL</label>
-                        <input type="url" id="qr-input-url" class="form-control form-control-sm input-mica"
-                            value="https://authntcg.github.io">
-                    </div>
+<body>
+    <div class="container py-4" style="max-width: 900px;">
 
-                    <div>
-                        <label class="form-label small text-muted">Data Mentah Output</label>
-                        <textarea id="qr-raw-data" class="form-control form-control-sm input-mica" rows="2" readonly
-                            style="font-family: monospace; font-size: 0.8rem;"></textarea>
-                    </div>
-                </div>
-            </div>
-
-            <div class="card h-auto mb-3 shadow-sm border-0 bg-opacity-10">
-                <div class="card-body">
-                    <h6 class="card-title fw-bold"><i class="bi bi-sliders"></i> Opsi Utama</h6>
-                    <div class="mb-2">
-                        <label class="form-label small">Ukuran QR: <span id="qr-size-val">300</span>px</label>
-                        <input type="range" class="form-range" id="qr-size" min="200" max="500" step="10" value="300">
-                    </div>
-                    <div class="mb-1">
-                        <label class="form-label small">Margin: <span id="qr-margin-val">10</span>px</label>
-                        <input type="range" class="form-range" id="qr-margin" min="0" max="50" step="5" value="10">
-                    </div>
-                </div>
-            </div>
-
-            <div class="card h-auto mb-3 shadow-sm border-0 bg-opacity-10">
-                <div class="card-body">
-                    <h6 class="card-title fw-bold"><i class="bi bi-palette"></i> Desain Visual</h6>
-                    <label class="form-label small fw-bold">Pola Titik (Dots)</label>
-                    <div class="row g-2 mb-3">
-                        <div class="col-8">
-                            <select id="qr-dots-type" class="form-select form-select-sm input-mica">
-                                <option value="square">Kotak</option>
-                                <option value="rounded" selected>Bulat</option>
-                                <option value="dots">Titik</option>
-                                <option value="classy">Classy</option>
-                            </select>
-                        </div>
-                        <div class="col-4"><input type="color" id="qr-dots-color"
-                                class="form-control form-control-sm h-100" value="#000000"></div>
-                    </div>
-
-                    <label class="form-label small fw-bold">Sudut (Corners)</label>
-                    <div class="row g-2 mb-2">
-                        <div class="col-8">
-                            <select id="qr-corner-type" class="form-select form-select-sm input-mica">
-                                <option value="square">Kotak</option>
-                                <option value="extra-rounded" selected>Extra Bulat</option>
-                            </select>
-                        </div>
-                        <div class="col-4"><input type="color" id="qr-corner-color"
-                                class="form-control form-control-sm h-100" value="#000000"></div>
-                    </div>
-
-                    <hr class="my-3 opacity-25">
-                    <label class="form-label small fw-bold">Bingkai Dekorasi (Frame)</label>
-                    <div class="row g-2 mb-2">
-                        <div class="col-12">
-                            <label class="form-label small fw-bold">Gaya Bingkai</label>
-                            <select id="qr-frame-type" class="form-select form-select-sm input-mica">
-                                <option value="frame-none" selected>Tanpa Bingkai</option>
-                                <option value="frame-scan-me">Scan Me (Hitam)</option>
-                                <option value="frame-polaroid">Polaroid (Putih)</option>
-                                <option value="frame-modern">Modern (Biru)</option>
-                            </select>
-                        </div>
-
-                        <div id="qr-frame-text-group" class="col-12 d-none">
-                            <label class="form-label small fw-bold">Teks pada Bingkai</label>
-                            <div class="input-group input-group-sm">
-                                <span class="input-group-text bg-transparent border-end-0 text-muted"><i
-                                        class="bi bi-fonts"></i></span>
-                                <input type="text" id="qr-frame-text"
-                                    class="form-control form-control-sm input-mica border-start-0" value="SCAN ME"
-                                    placeholder="Contoh: PINDAI SAYA">
-                            </div>
-                            <small class="text-muted" style="font-size: 0.7rem;">Teks ini akan muncul di bagian bawah
-                                bingkai.</small>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="card h-auto mb-4 shadow-sm border-0 bg-opacity-10">
-                <div class="card-body">
-                    <h6 class="card-title fw-bold"><i class="bi bi-image"></i> Logo</h6>
-                    <input type="file" id="qr-logo-file" accept="image/png, image/jpeg, image/svg+xml"
-                        class="form-control form-control-sm input-mica mb-2">
-                    <label class="form-label small">Skala Logo: <span id="qr-logo-size-val">0.4</span></label>
-                    <input type="range" class="form-range" id="qr-logo-size" min="0.1" max="0.4" step="0.05"
-                        value="0.3">
-                </div>
-            </div>
+        <div class="mb-3">
+            <a href="../../index.html" class="btn btn-mica-blue btn-sm">
+                <i class="bi bi-chevron-left"></i> Back To Home
+            </a>
         </div>
 
-        <div class="col-lg-5">
-            <div class="sticky-lg-top" style="top: 10px; z-index: 1;">
-                <div class="card h-auto shadow-sm border-0 bg-opacity-10 text-center">
-                    <div class="card-body">
-                        <h6 class="fw-bold mb-3"><i class="bi bi-eye"></i> Pratinjau QR</h6>
+        <div id="qr-app-content">
+            <div class="p-3" style="color: var(--text-color);">
+                <h4 class="mb-4"><i class="bi bi-qr-code"></i> Custom QR Generator</h4>
 
-                        <div id="qr-frame-wrapper" class="frame-none mx-auto mb-4">
-
-                            <div class="bg-white rounded mx-auto"
-                                style="position: relative; width: 100%; max-width: 250px; aspect-ratio: 1 / 1; overflow: hidden; box-shadow: 0 4px 10px rgba(0,0,0,0.1);">
-                                <div id="qr-canvas-container"
-                                    style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;"></div>
+                <div class="row g-4">
+                    <div class="col-lg-7">
+                        <div class="card h-auto mb-3 shadow-sm border-0 bg-opacity-10">
+                            <div class="card-body">
+                                <h6 class="card-title fw-bold"><i class="bi bi-input-cursor-text"></i> Data QR Code</h6>
+                                <div class="mb-3">
+                                    <label class="form-label small">Tipe Konten</label>
+                                    <select id="qr-type" class="form-select form-select-sm input-mica">
+                                        <option value="url">Tautan (URL)</option>
+                                        <option value="text">Teks Bebas</option>
+                                        <option value="email">Kirim Email</option>
+                                        <option value="wifi">Koneksi Wi-Fi</option>
+                                    </select>
+                                </div>
+                                <div id="qr-dynamic-inputs" class="mb-3">
+                                    <label class="form-label small">Masukkan Tautan URL</label>
+                                    <input type="url" id="qr-input-url" class="form-control form-control-sm input-mica"
+                                        value="https://authntcg.github.io">
+                                </div>
+                                <div>
+                                    <label class="form-label small text-muted">Data Mentah Output</label>
+                                    <textarea id="qr-raw-data" class="form-control form-control-sm input-mica" rows="2"
+                                        readonly style="font-family: monospace; font-size: 0.8rem;"></textarea>
+                                </div>
                             </div>
-
-                            <div class="frame-text-display">SCAN ME</div>
-
                         </div>
 
-                        <div class="input-group">
-                            <select id="qr-download-ext" class="form-select input-mica" style="max-width: 90px;">
-                                <option value="png">PNG</option>
-                                <option value="jpeg">JPG</option>
-                                <option value="svg">SVG</option>
-                            </select>
-                            <button class="btn btn-primary flex-grow-1" id="btn-download-qr">
-                                <i class="bi bi-download me-1"></i> Unduh
-                            </button>
+                        <div class="card h-auto mb-3 shadow-sm border-0 bg-opacity-10">
+                            <div class="card-body">
+                                <h6 class="card-title fw-bold"><i class="bi bi-sliders"></i> Opsi Utama</h6>
+                                <div class="mb-2">
+                                    <label class="form-label small">Ukuran QR: <span
+                                            id="qr-size-val">300</span>px</label>
+                                    <input type="range" class="form-range" id="qr-size" min="200" max="500" step="10"
+                                        value="300">
+                                </div>
+                                <div class="mb-1">
+                                    <label class="form-label small">Margin: <span id="qr-margin-val">10</span>px</label>
+                                    <input type="range" class="form-range" id="qr-margin" min="0" max="50" step="5"
+                                        value="10">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="card h-auto mb-3 shadow-sm border-0 bg-opacity-10">
+                            <div class="card-body">
+                                <h6 class="card-title fw-bold"><i class="bi bi-palette"></i> Desain Visual</h6>
+                                <label class="form-label small fw-bold">Pola Titik (Dots)</label>
+                                <div class="row g-2 mb-3">
+                                    <div class="col-8">
+                                        <select id="qr-dots-type" class="form-select form-select-sm input-mica">
+                                            <option value="square">Kotak</option>
+                                            <option value="rounded" selected>Bulat</option>
+                                            <option value="dots">Titik</option>
+                                            <option value="classy">Classy</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-4"><input type="color" id="qr-dots-color"
+                                            class="form-control form-control-sm h-100" value="#000000"></div>
+                                </div>
+
+                                <label class="form-label small fw-bold">Sudut (Corners)</label>
+                                <div class="row g-2 mb-2">
+                                    <div class="col-8">
+                                        <select id="qr-corner-type" class="form-select form-select-sm input-mica">
+                                            <option value="square">Kotak</option>
+                                            <option value="extra-rounded" selected>Extra Bulat</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-4"><input type="color" id="qr-corner-color"
+                                            class="form-control form-control-sm h-100" value="#000000"></div>
+                                </div>
+
+                                <hr class="my-3 opacity-25">
+                                <div class="row g-2 mb-2">
+                                    <div class="col-12">
+                                        <label class="form-label small fw-bold">Gaya Bingkai</label>
+                                        <select id="qr-frame-type" class="form-select form-select-sm input-mica">
+                                            <option value="frame-none" selected>Tanpa Bingkai</option>
+                                            <option value="frame-scan-me">Scan Me (Hitam)</option>
+                                            <option value="frame-polaroid">Polaroid (Putih)</option>
+                                            <option value="frame-modern">Modern (Biru)</option>
+                                        </select>
+                                    </div>
+                                    <div id="qr-frame-text-group" class="col-12 d-none">
+                                        <label class="form-label small fw-bold">Teks pada Bingkai</label>
+                                        <div class="input-group input-group-sm">
+                                            <span class="input-group-text bg-transparent border-end-0 text-muted"><i
+                                                    class="bi bi-fonts"></i></span>
+                                            <input type="text" id="qr-frame-text"
+                                                class="form-control form-control-sm input-mica border-start-0"
+                                                value="SCAN ME">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="card h-auto mb-4 shadow-sm border-0 bg-opacity-10">
+                            <div class="card-body">
+                                <h6 class="card-title fw-bold"><i class="bi bi-image"></i> Logo</h6>
+                                <input type="file" id="qr-logo-file" accept="image/png, image/jpeg, image/svg+xml"
+                                    class="form-control form-control-sm input-mica mb-2">
+                                <label class="form-label small">Skala Logo: <span
+                                        id="qr-logo-size-val">0.3</span></label>
+                                <input type="range" class="form-range" id="qr-logo-size" min="0.1" max="0.4" step="0.05"
+                                    value="0.3">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-lg-5">
+                        <div class="sticky-lg-top" style="top: 10px; z-index: 1;">
+                            <div class="card h-auto shadow-sm border-0 bg-opacity-10 text-center">
+                                <div class="card-body">
+                                    <h6 class="fw-bold mb-3"><i class="bi bi-eye"></i> Pratinjau QR</h6>
+
+                                    <div id="qr-frame-wrapper" class="frame-none mx-auto mb-4">
+                                        <div class="bg-white rounded mx-auto"
+                                            style="position: relative; width: 100%; max-width: 250px; aspect-ratio: 1 / 1; overflow: hidden; box-shadow: 0 4px 10px rgba(0,0,0,0.1);">
+                                            <div id="qr-canvas-container"
+                                                style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;">
+                                            </div>
+                                        </div>
+                                        <div class="frame-text-display">SCAN ME</div>
+                                    </div>
+
+                                    <div class="input-group">
+                                        <select id="qr-download-ext" class="form-select input-mica"
+                                            style="max-width: 90px;">
+                                            <option value="png">PNG</option>
+                                            <option value="jpeg">JPG</option>
+                                            <option value="svg">SVG</option>
+                                        </select>
+                                        <button class="btn btn-primary flex-grow-1" id="btn-download-qr">
+                                            <i class="bi bi-download me-1"></i> Unduh
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
-</div>
+
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script type="text/javascript" src="https://unpkg.com/qr-code-styling@1.5.0/lib/qr-code-styling.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+
+    <script type="module">
+        import { AppConfig } from '../../assets/script/js/config.js';
+        const isDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+        document.documentElement.setAttribute("data-bs-theme", isDark ? "dark" : "light");
+        const baseUrl = isDark ? AppConfig.UI.BG_URL_DARK : AppConfig.UI.BG_URL_LIGHT;
+        document.body.style.backgroundImage = `url('${baseUrl}?lock=${Date.now()}')`;
+        document.body.style.backgroundSize = 'cover';
+        document.body.style.backgroundAttachment = 'fixed';
+    </script>
+
+    <script src="../../assets/script/js/qr-generator.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            if (typeof QRGeneratorLogic !== 'undefined') {
+                QRGeneratorLogic.init(); // Auto-start saat diakses via URL langsung
+            }
+        });
+    </script>
+</body>
+
+</html>
