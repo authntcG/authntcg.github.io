@@ -239,6 +239,8 @@ class AppWindow extends HTMLElement {
         const title = this.getAttribute('title') || 'Window';
         const url = this.getAttribute('url');
         const htmlSnippet = this.innerHTML; 
+        const isCard = htmlSnippet.trim().startsWith('<div class="card"'); // Cek awal konten
+        const bodyClass = (!url && isCard) ? '' : 'glass-body'; // Tentukan class secara dinamis
         
         this.style.position = 'fixed';
         // FIX Z-INDEX: Gunakan Date.now() milidetik agar selalu di tumpukan paling atas saat baru dibuat
@@ -259,26 +261,27 @@ class AppWindow extends HTMLElement {
             : '';
 
         this.innerHTML = `
-            <div class="app-window shadow-lg" style="width: 100%; height: 100%; border-radius: 12px; overflow: hidden; display: flex; flex-direction: column;">
-                <div class="app-window-header d-flex justify-content-between align-items-center p-2">
-                    <div class="app-window-title ps-2 text-truncate">
-                        <i class="bi bi-window-stack me-1"></i> ${title}
-                    </div>
-                    <div class="app-window-controls d-flex">
-                        ${refreshBtnHTML} <button class="btn btn-sm btn-win-ctrl btn-minimize-win" title="Minimize"><i class="bi bi-dash-lg"></i></button>
-                        <button class="btn btn-sm btn-win-ctrl btn-maximize-win" title="Maximize"><i class="bi bi-app-indicator"></i></button>
-                        <button class="btn btn-sm btn-win-ctrl btn-close-win" title="Close"><i class="bi bi-x-lg"></i></button>
-                    </div>
+        <div class="app-window shadow-lg" style="width: 100%; height: 100%; border-radius: 12px; overflow: hidden; display: flex; flex-direction: column;">
+            <div class="app-window-header d-flex justify-content-between align-items-center p-2">
+                <div class="app-window-title ps-2 text-truncate">
+                    <i class="bi bi-window-stack me-1"></i> ${title}
                 </div>
-                <div class="app-window-body" style="position: relative; flex-grow: 1; overflow: ${bodyOverflow};">
-                    ${windowContent}
-                    <div class="iframe-overlay" style="position: absolute; top:0; left:0; width:100%; height:100%; display:none; z-index:10;"></div>
+                <div class="app-window-controls d-flex">
+                    ${refreshBtnHTML} 
+                    <button class="btn btn-sm btn-win-ctrl btn-minimize-win" title="Minimize"><i class="bi bi-dash-lg"></i></button>
+                    <button class="btn btn-sm btn-win-ctrl btn-maximize-win" title="Maximize"><i class="bi bi-app-indicator"></i></button>
+                    <button class="btn btn-sm btn-win-ctrl btn-close-win" title="Close"><i class="bi bi-x-lg"></i></button>
                 </div>
             </div>
-            <div class="resizer t"></div><div class="resizer r"></div>
-            <div class="resizer b"></div><div class="resizer l"></div>
-            <div class="resizer tl"></div><div class="resizer tr"></div>
-            <div class="resizer bl"></div><div class="resizer br"></div>
+            <div class="app-window-body ${bodyClass}" style="position: relative; flex-grow: 1; overflow: ${bodyOverflow};">
+                ${windowContent}
+                <div class="iframe-overlay" style="position: absolute; top:0; left:0; width:100%; height:100%; display:none; z-index:10;"></div>
+            </div>
+        </div>
+        <div class="resizer t"></div><div class="resizer r"></div>
+        <div class="resizer b"></div><div class="resizer l"></div>
+        <div class="resizer tl"></div><div class="resizer tr"></div>
+        <div class="resizer bl"></div><div class="resizer br"></div>
         `;
 
         this.initEvents();

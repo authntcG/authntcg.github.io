@@ -207,8 +207,8 @@ progress::-webkit-progress-value {
 /* 1. Base Styling Jendela Utama */
 .app-window {
     /* Efek Blur (Mica) */
-    backdrop-filter: blur(15px);
-    -webkit-backdrop-filter: blur(15px);
+    backdrop-filter: blur(30px);
+    -webkit-backdrop-filter: blur(30px);
     box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
     border-radius: 12px;
     overflow: hidden;
@@ -235,6 +235,36 @@ progress::-webkit-progress-value {
     position: relative;
     flex-grow: 1;
     background: transparent;
+    transition: background-color 0.3s ease, backdrop-filter 0.3s ease;
+}
+
+/* Kelas khusus yang akan diterapkan jika konten BUKAN diawali .card */
+.app-window-body.glass-body {
+    /* Tingkatkan blur ke 30px dan tambah Saturate agar warna di baliknya lebih hidup (tidak kusam) */
+    backdrop-filter: blur(30px) saturate(150%) !important;
+    -webkit-backdrop-filter: blur(30px) saturate(150%) !important;
+    
+    /* Trik rahasia: Paksa GPU untuk merender elemen ini agar blur tidak nge-bug */
+    transform: translateZ(0);
+    will-change: transform, backdrop-filter;
+}
+
+/* Penyesuaian warna untuk Light Mode */
+[data-bs-theme="light"] .app-window-body.glass-body {
+    background-color: rgba(255, 255, 255, 0.45) !important; 
+    border-top: 1px solid rgba(255, 255, 255, 0.3); /* Tambahan pantulan cahaya estetik */
+}
+
+/* Penyesuaian warna untuk Dark Mode */
+[data-bs-theme="dark"] .app-window-body.glass-body {
+    background-color: rgba(10, 10, 10, 0.55) !important; 
+    border-top: 1px solid rgba(255, 255, 255, 0.05); /* Tambahan pantulan cahaya estetik */
+}
+
+/* Pastikan konten di dalamnya tetap berada di atas overlay */
+.app-window-body.glass-body > * {
+    position: relative;
+    z-index: 2;
 }
 
 /* Kontrol Tombol Bawaan */
@@ -302,7 +332,8 @@ progress::-webkit-progress-value {
 /* Hitbox Resizer Disesuaikan (Lebih tebal agar mudah ditarik) */
 .resizer {
     position: absolute;
-    z-index: 20;
+    z-index: 99 !important; /* Tingkatkan kekuatan Z-Index */
+    transform: translateZ(0); /* Angkat hitbox ke layer GPU agar tidak tertimpa efek kaca */
 }
 
 /* Sisi - Ketebalan 10px menjorok 5px ke luar dan 5px ke dalam */
