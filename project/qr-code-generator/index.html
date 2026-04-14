@@ -20,6 +20,10 @@
 </head>
 
 <body>
+    <app-preloader class="preload-page">
+        <progress id="loading-bar" value="0" max="100"></progress>
+    </app-preloader>
+
     <div class="container py-4" style="max-width: 900px;">
 
         <div class="mb-3">
@@ -183,24 +187,54 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script type="text/javascript" src="https://unpkg.com/qr-code-styling@1.5.0/lib/qr-code-styling.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="../../assets/script/js/component.js"></script>
+    <script src="../../assets/script/js/qr-generator.js"></script>
 
     <script type="module">
         import { AppConfig } from '../../assets/script/js/config.js';
+        
+        // 1. Atur Tema
         const isDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
         document.documentElement.setAttribute("data-bs-theme", isDark ? "dark" : "light");
         const baseUrl = isDark ? AppConfig.UI.BG_URL_DARK : AppConfig.UI.BG_URL_LIGHT;
-        document.body.style.backgroundImage = `url('${baseUrl}?lock=${Date.now()}')`;
-        document.body.style.backgroundSize = 'cover';
-        document.body.style.backgroundAttachment = 'fixed';
-    </script>
+        const bgUrl = `${baseUrl}?lock=${Date.now()}`;
 
-    <script src="../../assets/script/js/qr-generator.js"></script>
-    <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            if (typeof QRGeneratorLogic !== 'undefined') {
-                QRGeneratorLogic.init(); // Auto-start saat diakses via URL langsung
-            }
-        });
+        // 2. Unduh Gambar Secara Asinkron
+        const img = new Image();
+        
+        img.onload = () => {
+            // Jika gambar selesai diunduh, ekstrak (decode) ke memori GPU
+            img.decode().then(() => {
+                // Pasang ke latar belakang
+                document.body.style.backgroundImage = `url('${bgUrl}')`;
+                document.body.style.backgroundSize = 'cover';
+                document.body.style.backgroundAttachment = 'fixed';
+
+                // THE MAGIC: Tunggu browser benar-benar melukis gambar ke layar
+                requestAnimationFrame(() => {
+                    requestAnimationFrame(() => {
+                        // Mulai logika QR Code
+                        if (typeof QRGeneratorLogic !== 'undefined') QRGeneratorLogic.init();
+                        // Beri tahu preloader untuk menghilang sekarang!
+                        window.dispatchEvent(new Event('app:ready'));
+                    });
+                });
+            }).catch(() => {
+                // Fallback jika browser lawas
+                document.body.style.backgroundImage = `url('${bgUrl}')`;
+                if (typeof QRGeneratorLogic !== 'undefined') QRGeneratorLogic.init();
+                window.dispatchEvent(new Event('app:ready'));
+            });
+        };
+
+        img.onerror = () => {
+            // Jika internet terputus, tetap buka loading agar tidak stuck
+            if (typeof QRGeneratorLogic !== 'undefined') QRGeneratorLogic.init();
+            window.dispatchEvent(new Event('app:ready'));
+        };
+
+        // Mulai proses unduh
+        img.src = bgUrl;
     </script>
 </body>
 
