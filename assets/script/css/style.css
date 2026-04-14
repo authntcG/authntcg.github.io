@@ -457,3 +457,79 @@ progress::-webkit-progress-value {
     display: block !important;
     margin: auto !important;  /* Paksa ke tengah (Fallback) */
 }
+
+/* =========================================
+   QR CODE DECORATIVE FRAMES
+   ========================================= */
+#qr-frame-wrapper {
+    position: relative;
+    width: 100%;
+    max-width: 320px;
+    transition: all 0.3s ease;
+    box-sizing: border-box;
+}
+
+/* Sembunyikan teks frame secara default */
+.frame-text-display {
+    display: none;
+    text-align: center;
+    font-weight: 800;
+    font-family: 'Segoe UI', Tahoma, sans-serif;
+    letter-spacing: 2px;
+}
+
+/* 1. Tanpa Bingkai */
+.frame-none {
+    padding: 0;
+    background: transparent;
+}
+
+/* 2. Bingkai "Scan Me" Hitam */
+.frame-scan-me {
+    background: #111;
+    padding: 25px 25px 60px 25px;
+    border-radius: 20px;
+    box-shadow: 0 10px 20px rgba(0,0,0,0.3);
+}
+.frame-scan-me .frame-text-display {
+    display: block;
+    color: #fff;
+    position: absolute;
+    bottom: 15px;
+    left: 0;
+    width: 100%;
+    font-size: 1.2rem;
+}
+
+/* 3. Bingkai Polaroid Putih */
+.frame-polaroid {
+    background: #fff;
+    padding: 20px 20px 70px 20px;
+    border-radius: 5px;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+}
+.frame-polaroid .frame-text-display {
+    display: block;
+    color: #333;
+    position: absolute;
+    bottom: 20px;
+    left: 0;
+    width: 100%;
+    font-size: 1.1rem;
+    font-family: 'Courier New', Courier, monospace; /* Teks bergaya mesin tik */
+    letter-spacing: 0;
+}
+
+/* 4. Bingkai Modern Biru */
+.frame-modern {
+    background: linear-gradient(135deg, #0061ff 0%, #60efff 100%);
+    padding: 30px;
+    border-radius: 30px;
+}
+.frame-modern .frame-text-display {
+    display: block;
+    color: #fff;
+    margin-top: 15px;
+    font-size: 1.3rem;
+    text-transform: uppercase;
+}

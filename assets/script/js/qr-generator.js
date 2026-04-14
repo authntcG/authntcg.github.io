@@ -165,9 +165,32 @@ const QRGeneratorLogic = {
         // 5. Event Tombol Download (Aman)
         const btnDownload = document.getElementById('btn-download-qr');
         if (btnDownload) {
+            // Hapus event listener yang lama jika Anda me-replace fungsinya, 
+            // atau cukup ganti isinya dengan ini:
             btnDownload.addEventListener('click', () => {
                 const ext = document.getElementById('qr-download-ext')?.value || 'png';
-                this.qrCode.download({ name: "my-custom-qr", extension: ext });
+                
+                // Jika "Tanpa Bingkai", gunakan download bawaan pustaka agar kualitas SVG/Kanvas maksimal
+                if (frameTypeSelect.value === 'frame-none') {
+                    this.qrCode.download({ name: "authntcg-qr", extension: ext });
+                } else {
+                    // Jika memakai bingkai, "foto" elemen HTML-nya
+                    const targetElement = document.getElementById('qr-frame-wrapper');
+                    
+                    // html2canvas merender elemen HTML menjadi kanvas
+                    html2canvas(targetElement, {
+                        backgroundColor: null, // Transparan jika diperlukan
+                        scale: 3 // Perbesar resolusi gambar hasil unduhan 3x lipat agar HD
+                    }).then(canvas => {
+                        // Buat link download palsu untuk mengunduh gambar
+                        const link = document.createElement('a');
+                        link.download = `authntcg-framed-qr.${ext}`;
+                        // SVG tidak didukung secara native oleh metode ini, jadi kita paksa ke PNG/JPEG
+                        const imageType = ext === 'jpeg' ? 'image/jpeg' : 'image/png';
+                        link.href = canvas.toDataURL(imageType, 1.0);
+                        link.click();
+                    });
+                }
             });
         }
 
@@ -185,14 +208,45 @@ const QRGeneratorLogic = {
                 if (file) {
                     const reader = new FileReader();
                     reader.onload = (event) => {
-                        this.currentLogo = event.target.result; // Simpan ke state
-                        this.qrCode.update({ 
-                            image: this.currentLogo,
-                            imageOptions: { hideBackgroundDots: true } 
-                        });
+                        this.qrCode.update({ image: event.target.result });
                     };
                     reader.readAsDataURL(file);
+                } else {
+                    this.qrCode.update({ image: "" });
                 }
+            });
+        }
+
+        // 8. Event Listener untuk Bingkai
+        const frameTypeSelect = document.getElementById('qr-frame-type');
+        const frameTextGroup = document.getElementById('qr-frame-text-group');
+        const frameTextInput = document.getElementById('qr-frame-text');
+        const frameWrapper = document.getElementById('qr-frame-wrapper');
+        const frameTextDisplay = document.querySelector('.frame-text-display');
+
+        if (frameTypeSelect && frameWrapper) {
+            frameTypeSelect.addEventListener('change', (e) => {
+                const selectedFrame = e.target.value;
+
+                // 1. Update tampilan pratinjau bingkai
+                frameWrapper.className = `mx-auto mb-4 ${selectedFrame}`;
+
+                // 2. Fix Bug: Sembunyikan/Tampilkan input teks berdasarkan pilihan
+                if (selectedFrame === 'frame-none') {
+                    frameTextGroup.classList.add('d-none'); // Sembunyikan
+                } else {
+                    frameTextGroup.classList.remove('d-none'); // Tampilkan
+                }
+                
+                // Pastikan pratinjau diperbarui (jika menggunakan html2canvas)
+                // updateUI(); 
+            });
+        }
+
+        if (frameTextInput && frameTextDisplay) {
+            frameTextInput.addEventListener('input', (e) => {
+                // Update tulisan di dalam bingkai secara realtime
+                frameTextDisplay.innerText = e.target.value;
             });
         }
     }
