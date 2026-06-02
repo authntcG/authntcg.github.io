@@ -190,31 +190,34 @@ const WindowManager = {
     },
 
     updateTaskbar() {
-        const taskbar = document.getElementById('app-taskbar');
+        // Targetkan ke dalam div #taskbar-dynamic-apps yang baru
+        const taskbarDynamic = document.getElementById('taskbar-dynamic-apps');
+        if (!taskbarDynamic) return;
+        
         const windows = document.querySelectorAll('.app-window-instance');
-        taskbar.innerHTML = '';
+        taskbarDynamic.innerHTML = '';
 
         windows.forEach(win => {
-            const item = document.createElement('div');
-            item.className = 'taskbar-item shadow-sm';
-            item.innerHTML = `<i class="bi bi-window me-1"></i> ${win.getAttribute('title')}`;
+            const btn = document.createElement('button');
+            btn.className = 'btn btn-taskbar border-0 rounded-3 shadow-sm mx-1 position-relative';
+            // Tambahkan dot indikator bahwa app sedang terbuka
+            btn.innerHTML = `
+                <i class="bi bi-window text-primary fs-5"></i>
+                <div class="position-absolute bottom-0 start-50 translate-middle-x bg-primary rounded-pill" style="width: 15px; height: 3px; margin-bottom: 2px;"></div>
+            `;
+            btn.title = win.getAttribute('title');
             
-            // --- LOGIKA RESTORE DARI MINIMIZE ---
-            item.onclick = () => {
+            btn.onclick = () => {
                 win.style.display = 'block';
                 win.style.zIndex = Date.now(); 
-                
                 win.style.animation = 'none';
                 win.getBoundingClientRect(); 
-                
                 win.style.animation = null; 
             };
             
-            taskbar.appendChild(item);
+            taskbarDynamic.appendChild(btn);
         });
-        
-        taskbar.style.display = windows.length > 0 ? 'flex' : 'none';
-    }
+    },
 };
 
 /**
@@ -455,6 +458,9 @@ const App = {
     async init() {
         window.WindowManager = WindowManager;
         WindowManager.init();
+        const zombieTaskbar = document.getElementById('app-taskbar');
+        if (zombieTaskbar) zombieTaskbar.remove();
+        DesktopUI.init();
         await UIManager.init();
         this.startGeoTracking();
         window.dispatchEvent(new Event('app:ready')); // Event khusus jika ingin hook custom behavior setelah app siap
@@ -479,6 +485,215 @@ const App = {
         setInterval(() => {
             navigator.geolocation.getCurrentPosition(updatePosition, err => console.error(err));
         }, AppConfig.WEATHER.REFRESH_INTERVAL);
+    }
+};
+
+/**
+ * Module: Desktop UI Controller (Start Menu, Clock, Context Menu)
+ */
+const DesktopUI = {
+    activeCalDate: new Date(),
+
+    init() {
+        this.startMenu = document.getElementById('start-menu');
+        this.clockPanel = document.getElementById('clock-panel');
+        this.ctxDesktop = document.getElementById('desktop-context-menu');
+        this.ctxIcon = document.getElementById('icon-context-menu');
+        
+        this.setupClock();
+        this.setupClickOutside();
+        this.setupContextMenu();
+
+        // Render Kalender saat pertama kali dimuat
+        this.renderCalendar();
+
+        window.DesktopUI = this; // Expose to HTML inline scripts
+    },
+
+    toggleStartMenu(e) {
+        if(e) e.stopPropagation(); // FIX: Cegah klik tembus ke layar utama (Desktop)
+        
+        // Simpan status saat ini sebelum menutup panel lain
+        const isHidden = this.startMenu.classList.contains('scale-hide');
+        
+        this.closeAllPanels(); // Tutup panel jam jika sedang terbuka
+        
+        if (isHidden) {
+            this.startMenu.classList.remove('scale-hide');
+        } else {
+            this.startMenu.classList.add('scale-hide');
+        }
+    },
+
+    closeAllPanels() {
+        if(this.clockPanel) this.clockPanel.classList.add('scale-hide');
+        if(this.startMenu) this.startMenu.classList.add('scale-hide'); // Pastikan Start Menu juga ikut tertutup
+        this.hideContextMenus();
+    },
+
+    toggleClockPanel(e) {
+        if(e) e.stopPropagation();
+        this.startMenu.classList.add('scale-hide');
+        this.hideContextMenus();
+        
+        if (this.clockPanel.classList.contains('scale-hide')) {
+            // FIX BUG POSISI: Hitung posisi tombol yang diklik
+            if (e && e.currentTarget) {
+                const btnRect = e.currentTarget.getBoundingClientRect();
+                const panelWidth = 340; // Sesuai dengan style width di HTML
+                
+                // Rumus memposisikan panel tepat di tengah-atas tombol
+                let leftPos = btnRect.left + (btnRect.width / 2) - (panelWidth / 2);
+                
+                // Mencegah panel keluar/terpotong di ujung kanan layar
+                if (leftPos + panelWidth > window.innerWidth - 10) {
+                    leftPos = window.innerWidth - panelWidth - 10;
+                }
+                
+                // Terapkan posisi baru
+                this.clockPanel.style.left = `${leftPos}px`;
+            }
+            
+            this.clockPanel.classList.remove('scale-hide');
+        } else {
+            this.clockPanel.classList.add('scale-hide');
+        }
+    },
+
+    setupClickOutside() {
+        document.addEventListener('click', (e) => {
+            // Karena tombol start & jam sudah memblokir event klik (stopPropagation), 
+            // klik sembarang di area desktop/jendela pasti akan menjalankan perintah ini:
+            this.closeAllPanels();
+        });
+        
+        // Mencegah panel tertutup saat diklik di dalamnya
+        this.startMenu?.addEventListener('click', e => e.stopPropagation());
+        this.clockPanel?.addEventListener('click', e => e.stopPropagation());
+        this.ctxDesktop?.addEventListener('click', e => e.stopPropagation());
+        this.ctxIcon?.addEventListener('click', e => e.stopPropagation());
+    },
+
+    // --- KODE BARU: LOGIKA KALENDER ---
+    renderCalendar() {
+        const monthYearEl = document.getElementById('calendar-month-year');
+        const gridEl = document.getElementById('calendar-days-grid');
+        if(!gridEl || !monthYearEl) return;
+
+        const year = this.activeCalDate.getFullYear();
+        const month = this.activeCalDate.getMonth();
+        const today = new Date();
+
+        // ENHANCEMENT: Nama Bulan dalam Bahasa Indonesia
+        const monthNames = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
+        monthYearEl.innerText = `${monthNames[month]} ${year}`;
+
+        gridEl.innerHTML = '';
+
+        const firstDay = new Date(year, month, 1).getDay();
+        const daysInMonth = new Date(year, month + 1, 0).getDate();
+        const daysInPrevMonth = new Date(year, month, 0).getDate();
+
+        for (let i = firstDay; i > 0; i--) {
+            const day = daysInPrevMonth - i + 1;
+            gridEl.innerHTML += `<div class="calendar-day text-muted">${day}</div>`;
+        }
+
+        for (let i = 1; i <= daysInMonth; i++) {
+            const isToday = (i === today.getDate() && month === today.getMonth() && year === today.getFullYear());
+            const activeClass = isToday ? 'active' : '';
+            gridEl.innerHTML += `<div class="calendar-day ${activeClass}">${i}</div>`;
+        }
+
+        const totalCells = firstDay + daysInMonth;
+        const remainingCells = 42 - totalCells;
+        for (let i = 1; i <= remainingCells; i++) {
+            gridEl.innerHTML += `<div class="calendar-day text-muted">${i}</div>`;
+        }
+    },
+
+    changeMonth(offset) {
+        // Geser bulan (1 untuk next, -1 untuk prev)
+        this.activeCalDate.setMonth(this.activeCalDate.getMonth() + offset);
+        this.renderCalendar();
+    },
+
+    setupClock() {
+        setInterval(() => {
+            const now = new Date();
+            
+            // Format waktu Indonesia (id-ID)
+            const timeStr = now.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }).replace(/\./g, ':');
+            const dateStr = now.toLocaleDateString('id-ID', { day: '2-digit', month: '2-digit', year: '2-digit' });
+            
+            const tbTime = document.getElementById('taskbar-time');
+            const tbDate = tbTime?.nextElementSibling;
+            
+            if (tbTime) tbTime.innerText = timeStr;
+            if (tbDate) tbDate.innerText = dateStr;
+
+            const panelTime = document.getElementById('panel-time-large');
+            if (panelTime && !this.clockPanel.classList.contains('scale-hide')) {
+                // Teks Kalender besar (Misal: Senin, 1 Januari)
+                panelTime.innerText = now.toLocaleTimeString('id-ID', { hour12: false }).replace(/\./g, ':');
+                document.getElementById('panel-date-large').innerText = now.toLocaleDateString('id-ID', { weekday: 'long', month: 'long', day: 'numeric' });
+            }
+        }, 1000);
+    },
+
+    hideContextMenus() {
+        // Gunakan ctx-hide, bukan scale-hide
+        if(this.ctxDesktop) this.ctxDesktop.classList.add('ctx-hide');
+        if(this.ctxIcon) this.ctxIcon.classList.add('ctx-hide');
+    },
+
+    setupContextMenu() {
+        document.addEventListener('contextmenu', (e) => {
+            e.preventDefault();
+            this.hideContextMenus();
+            
+            const isIcon = e.target.closest('.desktop-icon');
+            const menu = isIcon ? this.ctxIcon : this.ctxDesktop;
+            
+            if (menu) {
+                // 1. Terapkan posisi persis di ujung kursor (SEBELUM menu dimunculkan)
+                let x = e.clientX;
+                let y = e.clientY;
+                
+                menu.style.left = `${x}px`;
+                menu.style.top = `${y}px`;
+                
+                // 2. Munculkan menu
+                menu.classList.remove('ctx-hide');
+                
+                // 3. Beri waktu sejenak (1 frame) agar browser merender ukuran menu, 
+                //    lalu geser jika menu menabrak batas kanan atau bawah layar.
+                requestAnimationFrame(() => {
+                    const rect = menu.getBoundingClientRect();
+                    
+                    if (x + rect.width > window.innerWidth) {
+                        menu.style.left = `${window.innerWidth - rect.width - 5}px`;
+                    }
+                    if (y + rect.height > window.innerHeight) {
+                        menu.style.top = `${window.innerHeight - rect.height - 5}px`;
+                    }
+                });
+            }
+        });
+
+        window.handleMenuAction = (action) => {
+            this.hideContextMenus();
+            if (action === 'toggle-theme') this.toggleTheme();
+            if (action === 'refresh-desktop') location.reload();
+        };
+    },
+
+    toggleTheme() {
+        const html = document.querySelector("html");
+        const current = html.getAttribute("data-bs-theme");
+        html.setAttribute("data-bs-theme", current === "dark" ? "light" : "dark");
+        // Trigger event manual jika ada komponen yang listen
+        window.dispatchEvent(new Event('theme-changed')); 
     }
 };
 

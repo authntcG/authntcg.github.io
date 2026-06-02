@@ -19,12 +19,14 @@
 }
 
 /* Base Styles */
-html, body {
+html,
+body {
     width: 100vw;
     height: 100vh;
     margin: 0;
     padding: 0;
-    overflow: hidden !important; /* KUNCI: Matikan semua scroll bawaan browser */
+    overflow: hidden !important;
+    /* KUNCI: Matikan semua scroll bawaan browser */
     position: relative;
 }
 
@@ -45,8 +47,9 @@ body {
 .desktop-area {
     width: 100%;
     /* Sisakan ruang di bawah agar konten tidak tertutup taskbar (misal tinggi taskbar ~60px) */
-    height: calc(100vh - 70px); 
-    overflow-y: auto; /* Jika widget sangat banyak, area desktop saja yang bisa discroll */
+    height: calc(100vh - 70px);
+    overflow-y: auto;
+    /* Jika widget sangat banyak, area desktop saja yang bisa discroll */
     overflow-x: hidden;
     padding-bottom: 20px;
 }
@@ -243,7 +246,7 @@ progress::-webkit-progress-value {
     /* Tingkatkan blur ke 30px dan tambah Saturate agar warna di baliknya lebih hidup (tidak kusam) */
     backdrop-filter: blur(30px) saturate(150%) !important;
     -webkit-backdrop-filter: blur(30px) saturate(150%) !important;
-    
+
     /* Trik rahasia: Paksa GPU untuk merender elemen ini agar blur tidak nge-bug */
     transform: translateZ(0);
     will-change: transform, backdrop-filter;
@@ -251,18 +254,20 @@ progress::-webkit-progress-value {
 
 /* Penyesuaian warna untuk Light Mode */
 [data-bs-theme="light"] .app-window-body.glass-body {
-    background-color: rgba(255, 255, 255, 0.45) !important; 
-    border-top: 1px solid rgba(255, 255, 255, 0.3); /* Tambahan pantulan cahaya estetik */
+    background-color: rgba(255, 255, 255, 0.45) !important;
+    border-top: 1px solid rgba(255, 255, 255, 0.3);
+    /* Tambahan pantulan cahaya estetik */
 }
 
 /* Penyesuaian warna untuk Dark Mode */
 [data-bs-theme="dark"] .app-window-body.glass-body {
-    background-color: rgba(10, 10, 10, 0.55) !important; 
-    border-top: 1px solid rgba(255, 255, 255, 0.05); /* Tambahan pantulan cahaya estetik */
+    background-color: rgba(10, 10, 10, 0.55) !important;
+    border-top: 1px solid rgba(255, 255, 255, 0.05);
+    /* Tambahan pantulan cahaya estetik */
 }
 
 /* Pastikan konten di dalamnya tetap berada di atas overlay */
-.app-window-body.glass-body > * {
+.app-window-body.glass-body>* {
     position: relative;
     z-index: 2;
 }
@@ -283,7 +288,8 @@ progress::-webkit-progress-value {
    TEMA LIGHT (Mode Terang)
    ========================================= */
 [data-bs-theme="light"] .app-window-header {
-    background-color: rgba(255, 255, 255, 0.4); /* Sedikit lebih pekat dari body */
+    background-color: rgba(255, 255, 255, 0.4);
+    /* Sedikit lebih pekat dari body */
     border-bottom: 1px solid rgba(0, 0, 0, 0.1);
     color: #000;
 }
@@ -300,7 +306,8 @@ progress::-webkit-progress-value {
    TEMA DARK (Mode Gelap)
    ========================================= */
 [data-bs-theme="dark"] .app-window-header {
-    background-color: rgba(0, 0, 0, 0.4); /* Sedikit lebih gelap dari body */
+    background-color: rgba(0, 0, 0, 0.4);
+    /* Sedikit lebih gelap dari body */
     border-bottom: 1px solid rgba(255, 255, 255, 0.1);
     color: #fff;
 }
@@ -315,7 +322,10 @@ progress::-webkit-progress-value {
 
 .iframe-overlay {
     position: absolute;
-    top: 0; left: 0; width: 100%; height: 100%;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
     display: none;
     z-index: 10;
 }
@@ -324,6 +334,7 @@ progress::-webkit-progress-value {
 .app-window-instance.is-maximized {
     border-radius: 0 !important;
 }
+
 .app-window-instance.is-maximized .app-window {
     border-radius: 0 !important;
     border: none !important;
@@ -332,21 +343,77 @@ progress::-webkit-progress-value {
 /* Hitbox Resizer Disesuaikan (Lebih tebal agar mudah ditarik) */
 .resizer {
     position: absolute;
-    z-index: 99 !important; /* Tingkatkan kekuatan Z-Index */
-    transform: translateZ(0); /* Angkat hitbox ke layer GPU agar tidak tertimpa efek kaca */
+    z-index: 99 !important;
+    /* Tingkatkan kekuatan Z-Index */
+    transform: translateZ(0);
+    /* Angkat hitbox ke layer GPU agar tidak tertimpa efek kaca */
 }
 
 /* Sisi - Ketebalan 10px menjorok 5px ke luar dan 5px ke dalam */
-.resizer.t { top: -5px; left: 0; width: 100%; height: 10px; cursor: n-resize; }
-.resizer.b { bottom: -5px; left: 0; width: 100%; height: 10px; cursor: s-resize; }
-.resizer.l { top: 0; left: -5px; width: 10px; height: 100%; cursor: w-resize; }
-.resizer.r { top: 0; right: -5px; width: 10px; height: 100%; cursor: e-resize; }
+.resizer.t {
+    top: -5px;
+    left: 0;
+    width: 100%;
+    height: 10px;
+    cursor: n-resize;
+}
+
+.resizer.b {
+    bottom: -5px;
+    left: 0;
+    width: 100%;
+    height: 10px;
+    cursor: s-resize;
+}
+
+.resizer.l {
+    top: 0;
+    left: -5px;
+    width: 10px;
+    height: 100%;
+    cursor: w-resize;
+}
+
+.resizer.r {
+    top: 0;
+    right: -5px;
+    width: 10px;
+    height: 100%;
+    cursor: e-resize;
+}
 
 /* Pojok - Ketebalan 15px */
-.resizer.tl { top: -5px; left: -5px; width: 15px; height: 15px; cursor: nw-resize; }
-.resizer.tr { top: -5px; right: -5px; width: 15px; height: 15px; cursor: ne-resize; }
-.resizer.bl { bottom: -5px; left: -5px; width: 15px; height: 15px; cursor: sw-resize; }
-.resizer.br { bottom: -5px; right: -5px; width: 15px; height: 15px; cursor: se-resize; }
+.resizer.tl {
+    top: -5px;
+    left: -5px;
+    width: 15px;
+    height: 15px;
+    cursor: nw-resize;
+}
+
+.resizer.tr {
+    top: -5px;
+    right: -5px;
+    width: 15px;
+    height: 15px;
+    cursor: ne-resize;
+}
+
+.resizer.bl {
+    bottom: -5px;
+    left: -5px;
+    width: 15px;
+    height: 15px;
+    cursor: sw-resize;
+}
+
+.resizer.br {
+    bottom: -5px;
+    right: -5px;
+    width: 15px;
+    height: 15px;
+    cursor: se-resize;
+}
 
 /* Taskbar Area */
 /* 1. Base Styling (Layout & Efek Kaca) */
@@ -358,8 +425,9 @@ progress::-webkit-progress-value {
     display: flex;
     gap: 10px;
     z-index: 2000;
-    padding: 8px 15px; /* Sedikit ditebalkan agar proporsional */
-    
+    padding: 8px 15px;
+    /* Sedikit ditebalkan agar proporsional */
+
     /* Efek blur disamakan dengan komponen .card (15px) */
     backdrop-filter: blur(15px);
     -webkit-backdrop-filter: blur(15px);
@@ -383,37 +451,45 @@ progress::-webkit-progress-value {
 
 /* --- TEMA LIGHT (Mode Terang) --- */
 [data-bs-theme="light"] #app-taskbar {
-    background-color: rgba(255, 255, 255, 0.65) !important; /* Putih Transparan */
+    background-color: rgba(255, 255, 255, 0.65) !important;
+    /* Putih Transparan */
 }
 
 [data-bs-theme="light"] .taskbar-item {
     background-color: rgba(255, 255, 255, 0.5);
     color: #000;
-    border: 1px solid rgba(0, 0, 0, 0.05); /* Garis batas sangat tipis */
+    border: 1px solid rgba(0, 0, 0, 0.05);
+    /* Garis batas sangat tipis */
 }
 
 [data-bs-theme="light"] .taskbar-item:hover {
-    background-color: rgba(255, 255, 255, 0.9); /* Lebih solid saat di-hover */
+    background-color: rgba(255, 255, 255, 0.9);
+    /* Lebih solid saat di-hover */
     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-    transform: translateY(-2px); /* Efek melayang */
+    transform: translateY(-2px);
+    /* Efek melayang */
 }
 
 /* --- TEMA DARK (Mode Gelap) --- */
 [data-bs-theme="dark"] #app-taskbar {
-    background-color: rgba(0, 0, 0, 0.60) !important; /* Hitam Transparan */
+    background-color: rgba(0, 0, 0, 0.60) !important;
+    /* Hitam Transparan */
     border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 [data-bs-theme="dark"] .taskbar-item {
-    background-color: rgba(255, 255, 255, 0.1); /* Lapisan putih tipis di atas hitam */
+    background-color: rgba(255, 255, 255, 0.1);
+    /* Lapisan putih tipis di atas hitam */
     color: #fff;
     border: 1px solid transparent;
 }
 
 [data-bs-theme="dark"] .taskbar-item:hover {
-    background-color: rgba(255, 255, 255, 0.25); /* Lebih terang saat di-hover */
+    background-color: rgba(255, 255, 255, 0.25);
+    /* Lebih terang saat di-hover */
     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
-    transform: translateY(-2px); /* Efek melayang */
+    transform: translateY(-2px);
+    /* Efek melayang */
 }
 
 /* =========================================
@@ -442,14 +518,28 @@ progress::-webkit-progress-value {
 
 /* Animasi saat Window Pertama Kali Dibuka (Membesar & Memantul Tipis) */
 @keyframes window-open {
-    0% { opacity: 0; transform: scale(0.9) translateY(20px); }
-    100% { opacity: 1; transform: scale(1) translateY(0); }
+    0% {
+        opacity: 0;
+        transform: scale(0.9) translateY(20px);
+    }
+
+    100% {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+    }
 }
 
 /* Animasi saat Window Ditutup / Di-Minimize (Mengecil & Pudar) */
 @keyframes window-close {
-    0% { opacity: 1; transform: scale(1) translateY(0); }
-    100% { opacity: 0; transform: scale(0.95) translateY(10px); }
+    0% {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+    }
+
+    100% {
+        opacity: 0;
+        transform: scale(0.95) translateY(10px);
+    }
 }
 
 /* Terapkan animasi open secara default pada window baru */
@@ -468,25 +558,28 @@ progress::-webkit-progress-value {
 /* Class khusus untuk transisi halus saat Maximize / Restore.
    Catatan: Class ini HARUS DICOPOT saat drag/resize agar tidak lag. */
 .window-animating {
-    transition: top 0.3s cubic-bezier(0.25, 0.8, 0.25, 1), 
-                left 0.3s cubic-bezier(0.25, 0.8, 0.25, 1), 
-                width 0.3s cubic-bezier(0.25, 0.8, 0.25, 1), 
-                height 0.3s cubic-bezier(0.25, 0.8, 0.25, 1) !important;
+    transition: top 0.3s cubic-bezier(0.25, 0.8, 0.25, 1),
+        left 0.3s cubic-bezier(0.25, 0.8, 0.25, 1),
+        width 0.3s cubic-bezier(0.25, 0.8, 0.25, 1),
+        height 0.3s cubic-bezier(0.25, 0.8, 0.25, 1) !important;
 }
 
 /* =========================================
    QR CODE GENERATOR RESPONSIVE FIX
    ========================================= */
 /* Targetkan langsung ke elemen buatan pustaka qr-code-styling */
-#qr-canvas-container > *,
+#qr-canvas-container>*,
 #qr-canvas-container svg,
 #qr-canvas-container canvas {
     max-width: 100% !important;
     max-height: 100% !important;
-    width: auto !important;   /* Membiarkan browser menghitung lebar proporsional */
-    height: auto !important;  /* Membiarkan browser menghitung tinggi proporsional */
+    width: auto !important;
+    /* Membiarkan browser menghitung lebar proporsional */
+    height: auto !important;
+    /* Membiarkan browser menghitung tinggi proporsional */
     display: block !important;
-    margin: auto !important;  /* Paksa ke tengah (Fallback) */
+    margin: auto !important;
+    /* Paksa ke tengah (Fallback) */
 }
 
 /* =========================================
@@ -520,8 +613,9 @@ progress::-webkit-progress-value {
     background: #111;
     padding: 25px 25px 60px 25px;
     border-radius: 20px;
-    box-shadow: 0 10px 20px rgba(0,0,0,0.3);
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
 }
+
 .frame-scan-me .frame-text-display {
     display: block;
     color: #fff;
@@ -537,8 +631,9 @@ progress::-webkit-progress-value {
     background: #fff;
     padding: 20px 20px 70px 20px;
     border-radius: 5px;
-    box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
 }
+
 .frame-polaroid .frame-text-display {
     display: block;
     color: #333;
@@ -547,7 +642,8 @@ progress::-webkit-progress-value {
     left: 0;
     width: 100%;
     font-size: 1.1rem;
-    font-family: 'Courier New', Courier, monospace; /* Teks bergaya mesin tik */
+    font-family: 'Courier New', Courier, monospace;
+    /* Teks bergaya mesin tik */
     letter-spacing: 0;
 }
 
@@ -557,10 +653,229 @@ progress::-webkit-progress-value {
     padding: 30px;
     border-radius: 30px;
 }
+
 .frame-modern .frame-text-display {
     display: block;
     color: #fff;
     margin-top: 15px;
     font-size: 1.3rem;
     text-transform: uppercase;
+}
+
+/* =========================================
+   DESKTOP UI (Windows 11 Style)
+   ========================================= */
+
+/* Typography Customizer */
+body#desktop-body {
+    font-family: 'Segoe UI', Inter, sans-serif;
+    color: var(--text-color);
+}
+
+/* Teks Bayangan untuk Ikon Desktop */
+.text-shadow {
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
+}
+
+/* Glass Panels */
+.glass-panel {
+    background: rgba(255, 255, 255, 0.5);
+    backdrop-filter: saturate(180%) blur(30px);
+    -webkit-backdrop-filter: saturate(180%) blur(30px);
+    border: 1px solid rgba(255, 255, 255, 0.4);
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+}
+
+.taskbar-glass {
+    background: rgba(255, 255, 255, 0.45);
+    backdrop-filter: saturate(180%) blur(25px);
+    -webkit-backdrop-filter: saturate(180%) blur(25px);
+    border: 1px solid rgba(255, 255, 255, 0.4);
+}
+
+[data-bs-theme="dark"] .glass-panel,
+[data-bs-theme="dark"] .taskbar-glass {
+    background: rgba(30, 30, 30, 0.55);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+}
+
+/* Desktop Icons */
+.desktop-icon {
+    width: 80px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.desktop-icon:hover {
+    background-color: rgba(255, 255, 255, 0.2);
+}
+
+.adaptive-icon {
+    width: 50px;
+    height: 50px;
+    border-radius: 22%;
+    /* Squircle */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+    transition: transform 0.2s;
+}
+
+.adaptive-icon-sm {
+    width: 35px;
+    height: 35px;
+    border-radius: 22%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.desktop-icon:hover .adaptive-icon {
+    transform: scale(1.05);
+}
+
+/* Gradients */
+.grad-blue {
+    background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+}
+
+.grad-green {
+    background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+}
+
+.grad-red {
+    background: linear-gradient(135deg, #ff0844 0%, #ffb199 100%);
+}
+
+.grad-purple {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+/* Taskbar Buttons */
+.btn-taskbar {
+    width: auto;
+    min-width: 45px;
+    height: 45px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color 0.2s;
+    color: var(--text-color);
+}
+
+.btn-taskbar:hover {
+    background-color: rgba(0, 0, 0, 0.1);
+}
+
+[data-bs-theme="dark"] .btn-taskbar:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+/* Start Menu Items */
+.start-item {
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.start-item:hover,
+.hover-bg:hover {
+    background-color: rgba(0, 0, 0, 0.05);
+}
+
+[data-bs-theme="dark"] .start-item:hover,
+[data-bs-theme="dark"] .hover-bg:hover {
+    background-color: rgba(255, 255, 255, 0.05);
+}
+
+/* Animations & Visibility */
+.panel-transition {
+    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    transform-origin: bottom center;
+}
+
+.scale-hide {
+    opacity: 0 !important;
+    visibility: hidden !important;
+    transform: translateX(-50%) translateY(20px) scale(0.95) !important;
+}
+
+#clock-panel.scale-hide {
+    transform: translateY(20px) scale(0.95) !important;
+}
+
+/* Context Menu */
+.context-menu { 
+    width: 220px; 
+    position: fixed !important; /* Paksa mode Fixed */
+    margin: 0 !important;       /* Cegah margin bawaan Bootstrap merusak kordinat */
+    transition: opacity 0.2s, transform 0.2s;
+    transform-origin: top left;
+    z-index: 9999 !important;   /* Pastikan tidak tertimpa Taskbar atau Jendela */
+}
+
+.context-menu.scale-hide {
+    transform: scale(0.95) !important;
+}
+
+.ctx-hide {
+    opacity: 0 !important;
+    visibility: hidden !important;
+    transform: scale(0.9) !important;
+}
+
+.context-item {
+    padding: 8px 16px;
+    font-size: 0.85rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    transition: background 0.2s;
+}
+
+.context-item:hover {
+    background: rgba(0, 0, 0, 0.1);
+}
+
+[data-bs-theme="dark"] .context-item:hover {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+/* =========================================
+   CALENDAR WIDGET
+   ========================================= */
+.btn-calendar {
+    border: none;
+    background: transparent;
+    color: var(--text-color);
+    transition: background-color 0.2s, color 0.2s;
+    border-radius: 8px !important;
+}
+
+.btn-calendar:hover {
+    background-color: rgba(128, 128, 128, 0.2);
+}
+
+.calendar-day {
+    padding: 8px 0;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+    color: var(--text-color);
+}
+
+.calendar-day:hover:not(.active) {
+    background-color: rgba(128, 128, 128, 0.2);
+}
+
+.calendar-day.active {
+    background: linear-gradient(135deg, #0059bb 0%, #004493 100%);
+    color: #ffffff !important;
+    font-weight: bold;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+}
+
+.calendar-day.text-muted {
+    opacity: 0.4;
 }
