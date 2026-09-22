@@ -233,9 +233,9 @@ const QRGeneratorLogic = {
 
                 // 2. Fix Bug: Sembunyikan/Tampilkan input teks berdasarkan pilihan
                 if (selectedFrame === 'frame-none') {
-                    frameTextGroup.classList.add('d-none'); // Sembunyikan
+                    frameTextGroup.classList.add('hidden'); // Sembunyikan
                 } else {
-                    frameTextGroup.classList.remove('d-none'); // Tampilkan
+                    frameTextGroup.classList.remove('hidden'); // Tampilkan
                 }
                 
                 // Pastikan pratinjau diperbarui (jika menggunakan html2canvas)

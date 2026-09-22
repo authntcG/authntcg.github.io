@@ -45,10 +45,8 @@ class AppFooter extends HTMLElement {
     connectedCallback() {
         const year = new Date().getFullYear();
         this.innerHTML = `
-            <footer class="footer px-2">
-                <p>
-                    <p>&copy; ${year} authntc<span style="color: blue;">G!</span></p>
-                </p>
+            <footer class="px-2 text-center mt-4 pb-4 text-sm text-gray-500">
+                <p>&copy; ${year} authntc<span class="text-blue-600">G!</span></p>
             </footer>
         `;
     }
@@ -63,18 +61,26 @@ class AppButton extends HTMLElement {
 
     // --- HELPER 1: Mengurus susunan Class CSS ---
     _buildClasses(variant, size, extraClass) {
-        let classes = `btn ${extraClass}`.trim();
+        let classes = `inline-flex items-center justify-center font-medium rounded-md transition-colors ${extraClass}`.trim();
         
         // Cek variant background
-        if (variant !== 'transparent' && variant !== 'none') {
-            classes += ` btn-mica-${variant}`;
+        if (variant === 'blue' || variant === 'primary') {
+            classes += ` bg-blue-500 hover:bg-blue-600 text-white`;
+        } else if (variant === 'light' || variant === 'white') {
+            classes += ` bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-200 border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700`;
+        } else if (variant !== 'transparent' && variant !== 'none') {
+            classes += ` bg-blue-500 hover:bg-blue-600 text-white`;
         }
         
         // Cek ukuran tombol
-        if (size) {
-            classes += ` btn-${size}`;
+        if (size === 'sm') {
+            classes += ` px-3 py-1.5 text-sm`;
+        } else if (size === 'lg') {
+            classes += ` px-5 py-3 text-lg`;
+        } else {
+            classes += ` px-4 py-2 text-base`;
         }
-        return classes;
+        return classes.replace('w-100', 'w-full').replace('h-100', 'h-full');
     }
 
     // --- HELPER 2: Mengurus atribut Bootstrap & ID ---
@@ -94,8 +100,8 @@ class AppButton extends HTMLElement {
         this.style.width = 'auto';
         this.style.height = 'auto';
 
-        const isW100 = extraClass.includes('w-100') || extraClass.includes('btn-block');
-        const isH100 = extraClass.includes('h-100');
+        const isW100 = extraClass.includes('w-100') || extraClass.includes('w-full') || extraClass.includes('btn-block');
+        const isH100 = extraClass.includes('h-100') || extraClass.includes('h-full');
 
         // Jika tidak butuh melar, kembalikan string kosong
         if (!isW100 && !isH100) {
@@ -243,8 +249,8 @@ class AppWindow extends HTMLElement {
         const bodyClass = (!url && isCard) ? '' : 'glass-body'; // Tentukan class secara dinamis
         
         this.style.position = 'fixed';
-        // FIX Z-INDEX: Gunakan Date.now() milidetik agar selalu di tumpukan paling atas saat baru dibuat
-        this.style.zIndex = Date.now(); 
+        // FIX Z-INDEX: Gunakan ++window.AppZIndex milidetik agar selalu di tumpukan paling atas saat baru dibuat
+        this.style.zIndex = ++window.AppZIndex; 
         this.style.display = 'block';
         this.style.boxSizing = 'border-box';
         this.classList.add('app-window-instance');
@@ -257,23 +263,23 @@ class AppWindow extends HTMLElement {
 
         // FITUR BARU: Tombol Refresh hanya dirender jika jendela ini memuat URL (Iframe)
         const refreshBtnHTML = url 
-            ? `<button class="btn btn-sm btn-win-ctrl btn-refresh-win" title="Refresh Halaman"><i class="bi bi-arrow-clockwise"></i></button>` 
+            ? `<button class="p-1 px-2 text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 hover:bg-black/10 dark:hover:bg-white/10 rounded transition-colors btn-refresh-win" title="Refresh Halaman"><i class="bi bi-arrow-clockwise"></i></button>` 
             : '';
 
         this.innerHTML = `
-        <div class="app-window shadow-lg" style="width: 100%; height: 100%; border-radius: 12px; overflow: hidden; display: flex; flex-direction: column;">
-            <div class="app-window-header d-flex justify-content-between align-items-center p-2">
-                <div class="app-window-title ps-2 text-truncate">
-                    <i class="bi bi-window-stack me-1"></i> ${title}
+        <div class="app-window shadow-xl ring-1 ring-black/5" style="width: 100%; height: 100%; border-radius: 12px; overflow: hidden; display: flex; flex-direction: column;">
+            <div class="app-window-header flex justify-between items-center p-2 bg-white/80 dark:bg-gray-800/80 backdrop-blur-md border-b border-gray-200 dark:border-gray-700 cursor-move text-gray-800 dark:text-gray-200">
+                <div class="app-window-title pl-2 truncate font-medium text-sm">
+                    <i class="bi bi-window-stack mr-1"></i> ${title}
                 </div>
-                <div class="app-window-controls d-flex">
+                <div class="app-window-controls flex space-x-1 pr-1">
                     ${refreshBtnHTML} 
-                    <button class="btn btn-sm btn-win-ctrl btn-minimize-win" title="Minimize"><i class="bi bi-dash-lg"></i></button>
-                    <button class="btn btn-sm btn-win-ctrl btn-maximize-win" title="Maximize"><i class="bi bi-app-indicator"></i></button>
-                    <button class="btn btn-sm btn-win-ctrl btn-close-win" title="Close"><i class="bi bi-x-lg"></i></button>
+                    <button class="p-1 px-2 text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 hover:bg-black/10 dark:hover:bg-white/10 rounded transition-colors btn-minimize-win" title="Minimize"><i class="bi bi-dash-lg"></i></button>
+                    <button class="p-1 px-2 text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 hover:bg-black/10 dark:hover:bg-white/10 rounded transition-colors btn-maximize-win" title="Maximize"><i class="bi bi-app-indicator"></i></button>
+                    <button class="p-1 px-2 text-gray-500 hover:text-white hover:bg-red-500 rounded transition-colors btn-close-win" title="Close"><i class="bi bi-x-lg"></i></button>
                 </div>
             </div>
-            <div class="app-window-body ${bodyClass}" style="position: relative; flex-grow: 1; overflow: ${bodyOverflow};">
+            <div class="app-window-body ${bodyClass} bg-white/90 dark:bg-gray-900/90 backdrop-blur-md" style="position: relative; flex-grow: 1; overflow: ${bodyOverflow};">
                 ${windowContent}
                 <div class="iframe-overlay" style="position: absolute; top:0; left:0; width:100%; height:100%; display:none; z-index:10;"></div>
             </div>
@@ -326,14 +332,87 @@ class AppWindow extends HTMLElement {
         }
     }
 
-    _applyInitialSize() {
-        this.style.top = this.getAttribute('y') || '15%';
-        this.style.left = this.getAttribute('x') || '20%';
-        this.style.width = this.getAttribute('width') || '700px';
-        this.style.height = this.getAttribute('height') || '500px';
+        _applyInitialSize() {
+        let reqW = this.getAttribute('width') || '700px';
+        let reqH = this.getAttribute('height') || '500px';
+        let reqTop = this.getAttribute('y');
+        let reqLeft = this.getAttribute('x');
+
+        let w = parseInt(reqW);
+        let h = parseInt(reqH);
+        if (isNaN(w)) w = 700;
+        if (isNaN(h)) h = 500;
+
+        const maxW = window.innerWidth;
+        const maxH = window.innerHeight - 60; // Leave space for taskbar
+
+        if (w > maxW) {
+            w = maxW;
+            reqLeft = '0px';
+        }
+        if (h > maxH) {
+            h = maxH;
+            reqTop = '0px';
+        }
+
+        this.style.width = w + 'px';
+        this.style.height = h + 'px';
+
+        // Auto center if coordinates are not explicitly forced
+        if (!reqLeft) {
+            let leftPos = (maxW - w) / 2;
+            reqLeft = leftPos > 0 ? leftPos + 'px' : '0px';
+        }
+        if (!reqTop) {
+            let topPos = (maxH - h) / 2;
+            reqTop = topPos > 0 ? topPos + 'px' : '0px';
+        }
+
+        this.style.left = reqLeft;
+        this.style.top = reqTop;
     }
 
-    initEvents() {
+            initEvents() {
+        // Bring window to front on click anywhere
+        this.addEventListener('mousedown', () => {
+            if (parseInt(this.style.zIndex) !== window.AppZIndex) {
+                this.style.zIndex = ++window.AppZIndex;
+            }
+        });
+        this.addEventListener('touchstart', () => {
+            if (parseInt(this.style.zIndex) !== window.AppZIndex) {
+                this.style.zIndex = ++window.AppZIndex;
+            }
+        }, { passive: true });
+
+        // Handle browser resize to keep window inside bounds
+        window.addEventListener('resize', () => {
+            if (this._isMaximized) return;
+            const maxW = window.innerWidth;
+            const maxH = window.innerHeight - 60; // 60px taskbar
+            
+            // Constrain width and height
+            let currentW = parseInt(this.style.width);
+            let currentH = parseInt(this.style.height);
+            if (currentW > maxW) this.style.width = maxW + 'px';
+            if (currentH > maxH) this.style.height = maxH + 'px';
+            
+            // Constrain position
+            currentW = parseInt(this.style.width);
+            currentH = parseInt(this.style.height);
+            let currentLeft = parseInt(this.style.left);
+            let currentTop = parseInt(this.style.top);
+            
+            if (currentLeft + currentW > maxW) {
+                let newLeft = maxW - currentW;
+                this.style.left = (newLeft > 0 ? newLeft : 0) + 'px';
+            }
+            if (currentTop + currentH > maxH) {
+                let newTop = maxH - currentH;
+                this.style.top = (newTop > 0 ? newTop : 0) + 'px';
+            }
+        });
+
         const header = this.querySelector('.app-window-header');
         const overlay = this.querySelector('.iframe-overlay');
 
@@ -363,7 +442,7 @@ class AppWindow extends HTMLElement {
 
         this.querySelector('.btn-close-win').addEventListener('click', () => {
             this.remove();
-            if (typeof WindowManager !== "undefined") WindowManager.updateTaskbar();
+            if (typeof WindowManager !== "undefined") WindowManager.updateTaskbar(); if(WindowManager.saveState) WindowManager.saveState();
         });
 
         // --- FUNGSI DRAG START ---
@@ -378,7 +457,7 @@ class AppWindow extends HTMLElement {
             
             const pos = getPos(e);
             this._offset = { x: this.offsetLeft - pos.x, y: this.offsetTop - pos.y };
-            this.style.zIndex = Date.now(); // FIX Z-INDEX
+            this.style.zIndex = ++window.AppZIndex; // FIX Z-INDEX
         };
 
         // --- FUNGSI RESIZE START ---
@@ -395,7 +474,7 @@ class AppWindow extends HTMLElement {
             this._initialMouse = { x: pos.x, y: pos.y };
             
             overlay.style.display = 'block';
-            this.style.zIndex = Date.now(); // FIX Z-INDEX
+            this.style.zIndex = ++window.AppZIndex; // FIX Z-INDEX
             
             e.stopPropagation(); 
             if (e.type === 'mousedown') e.preventDefault(); 
@@ -487,7 +566,7 @@ class AppWindow extends HTMLElement {
             // Tunggu animasi 200ms selesai, baru hapus dari DOM
             setTimeout(() => {
                 this.remove();
-                if (typeof WindowManager !== "undefined") WindowManager.updateTaskbar();
+                if (typeof WindowManager !== "undefined") WindowManager.updateTaskbar(); if(WindowManager.saveState) WindowManager.saveState();
             }, 200); 
         });
 
@@ -500,7 +579,7 @@ class AppWindow extends HTMLElement {
             setTimeout(() => {
                 this.style.display = 'none';
                 this.classList.remove('is-minimizing'); // Bersihkan state untuk nanti di-restore
-                if (typeof WindowManager !== "undefined") WindowManager.updateTaskbar();
+                if (typeof WindowManager !== "undefined") WindowManager.updateTaskbar(); if(WindowManager.saveState) WindowManager.saveState();
             }, 200);
         });
 
@@ -569,17 +648,29 @@ class AppWindow extends HTMLElement {
                         
                         // 3. Perbarui Taskbar agar nama baru muncul di bawah layar
                         if (window.WindowManager) {
-                            window.WindowManager.updateTaskbar();
+                            window.WindowManager.updateTaskbar(); if(WindowManager.saveState) WindowManager.saveState(); window.WindowManager.saveState();
                         }
                     }
 
                     // Pasang event listener click di dalam dokumen iframe (Untuk link berantai)
-                    iframeDoc.addEventListener('click', (e) => {
+                                        iframeDoc.addEventListener('click', (e) => {
                         const link = e.target.closest('a');
                         if (link) {
                             openLinkInNewWindow(e, link);
                         }
                     });
+                    
+                    // FITUR BARU: Bawa jendela ke depan saat Iframe diklik
+                    iframeDoc.addEventListener('mousedown', () => {
+                        if (parseInt(this.style.zIndex) !== window.AppZIndex) {
+                            this.style.zIndex = ++window.AppZIndex;
+                        }
+                    });
+                    iframeDoc.addEventListener('touchstart', () => {
+                        if (parseInt(this.style.zIndex) !== window.AppZIndex) {
+                            this.style.zIndex = ++window.AppZIndex;
+                        }
+                    }, { passive: true });
                 } catch (error) {
                     // Akan masuk ke sini jika Iframe adalah web luar (Cross-Origin).
                     // Secara diam-diam diabaikan karena dicegah oleh keamanan Browser.

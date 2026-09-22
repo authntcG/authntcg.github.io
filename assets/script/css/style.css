@@ -100,7 +100,7 @@ body {
     height: 100%;
     background-color: var(--bg-overlay);
     backdrop-filter: blur(10px);
-    z-index: 9999;
+    z-index: 99999;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -808,7 +808,7 @@ body#desktop-body {
 /* Context Menu */
 .context-menu { 
     width: 220px; 
-    position: fixed !important; /* Paksa mode Fixed */
+    position: absolute !important; /* Paksa mode Absolute untuk kompatibilitas DevTools */
     margin: 0 !important;       /* Cegah margin bawaan Bootstrap merusak kordinat */
     transition: opacity 0.2s, transform 0.2s;
     transform-origin: top left;
@@ -876,6 +876,6 @@ body#desktop-body {
     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
 }
 
-.calendar-day.text-muted {
+.calendar-day.text-gray-400 {
     opacity: 0.4;
 }
