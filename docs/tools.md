@@ -1,40 +1,91 @@
 # Dokumentasi Alat (Tools & Sub-Projects)
 
-Semua *tools* ini tersimpan pada direktori `/project/` dan dirender sebagai *micro-frontend* mutlak di dalam **Iframe Sandboxing** untuk menjamin tidak adanya kebocoran *event* maupun gaya (CSS) ke OS induk.
+Semua aplikasi (Tools) pada OS ini dienkapsulasi dengan ketat di dalam `/project/`. Mereka beroperasi sepenuhnya terpisah dari sistem inti berkat keajaiban **Iframe Sandboxing Architecture**. 
 
 ---
 
 ## 1. Pustaka AI Object Detection (`project/object-detection`)
 
-Aplikasi Computer Vision mutakhir yang berjalan 100% di peramban (Edge Computing) menggunakan **TensorFlow.js (COCO-SSD)**.
+Sebuah mahakarya *Computer Vision* yang membawa kecerdasan buatan langsung ke dalam peramban (*Client-Side Edge Computing*) melalui **TensorFlow.js**.
 
-### A. UI/UX: Spatial Bento Grid
-Aplikasi ini tidak berbentuk datar, melainkan menggunakan desain **Spatial UI**. Terdapat lapisan *Frosted Glass* (`backdrop-blur-xl`), tombol kapsul yang mengambang bebas, dan layout yang responsif menggunakan *Container Queries*. 
-Transisi tab antara Video, Gambar, dan *Live Camera* berjalan seketika (Vanilla JS) dengan transisi sinkronisasi konsol *Detection Stream*.
+### A. Alur Kerja Deteksi & Offset Math (TensorFlow Letterboxing Fix)
 
-### B. Algoritma Letterboxing Offset Math (Crucial Feature)
-Karena antarmuka menggunakan `object-fit: contain` untuk menjaga rasio video/gambar, ukuran layar DOM yang dibaca oleh *TensorFlow* akan mengalami distorsi.
-**Solusi Atomik:** 
-1. Mesin menggunakan `offscreenImg` (Image Object tanpa CSS) saat memanggil `ModelService.detect()` agar TF.js membaca piksel paling murni.
-2. `Renderer.drawPredictions()` melakukan kalkulasi matriks otomatis. Ia menghitung lebar *letterbox* (bingkai kosong hitam) yang diciptakan oleh layar, dan menambahkan koordinat absolut (Offset) pada *Bounding Box* hijau. Hasilnya, kotak hijau menempel dengan presisi level-piksel pada objek, terlepas dari seaneh apapun *aspect ratio* gambar yang diunggah.
+Masalah terbesar saat menggunakan model AI pada UI responsif adalah distorsi elemen `<video>` atau `<img>`. Saat menggunakan CSS `object-fit: contain`, media visual sering memiliki ruang kosong (Letterbox). TensorFlow membaca ruang kosong ini sebagai bagian dari gambar, menyebabkan kotak deteksi meleset jauh dari target!
 
-### C. State Cache & Preloader Sync
-- Pemuatan awal sistem terikat mutlak pada `ModelService.load()`. Animasi *Preloader* akan terus berjalan sampai *neural network* selesai diunduh.
-- Ketika layar OS di-resize, sistem menggunakan *Cache Memory* (`this.state.currentImagePredictions`) agar tidak mengulangi deteksi gambar yang memberatkan CPU/GPU.
+```mermaid
+flowchart TD
+    User(("Input Gambar/Kamera")) --> DOM["Elemen UI (CSS Stretched)"]
+    DOM --> |"Distorsi Visual"| Bug((Kotak Meleset!))
+    
+    User --> Memory["offscreenImg (Raw Canvas)"]
+    Memory --> |"Gambar Natural 1:1"| TF["TensorFlow ModelService"]
+    TF --> RawCoords["Raw Coordinates (X, Y)"]
+    
+    RawCoords --> Math{"Letterbox Offset Math"}
+    DOM -.-> |"Hitung Skala & Margin"| Math
+    
+    Math --> |"Koordinat Presisi Level Piksel"| Draw["Render HTML Bounding Box"]
+    Draw --> Perfect((Kotak Menempel Sempurna))
+```
+
+**Penjelasan Algoritma:**
+1. OS sengaja tidak menyuapi `HTMLImageElement` yang ada di layar ke dalam fungsi `tf.browser.fromPixels()`.
+2. OS menciptakan *Canvas/Image bayangan* (Offscreen) yang berukuran sama persis dengan aslinya (100% resolusi).
+3. Setelah TensorFlow mendeteksi koordinatnya, fungsi *Offset Math* akan melakukan penskalaan perbandingan antara "Resolusi Asli" vs "Ukuran Layar UI Terkini", lalu menambahkan variabel "margin" (kotak hitam layar). Hasilnya? Deteksi sempurna!
 
 ---
 
 ## 2. QR Code Generator (`project/qr-code-generator`)
 
-Sebuah generator QR yang dienkapsulasi di dalam objek _Singleton_ bernama `QRGeneratorLogic`.
+Sebuah generator kode matriks interaktif (Real-time Feedback) yang mendukung penyisipan logo *brand* di tengah matriks, serta opsi kustomisasi batas (*padding*) dan pola sudut.
 
-### Mekanisme Rendering Iframe
-Aplikasi ini kini berdiri di dalam halaman HTML-nya sendiri, membebaskan ketergantungan *timeout* dan injeksi raw teks dari `WindowManager`. OS hanya memanggil `url: 'project/qr-code-generator/index.html'`.
+### A. Strategi Mocked Download (html2canvas)
 
-### html2canvas Mocking
-Ketika QR code memakai bingkai kustom, *library* bawaan gagal mengunduhnya. Modul secara cerdik menggunakan `html2canvas` untuk memotret DOM UI (dengan skala kepadatan 3x / HD) lalu menstimulasi klik-unduh (*Mocked Download Link*) pada _browser_.
+Tantangan utama dari aplikasi ini adalah fitur penambahan "Bingkai Foto" (Polaroid). Fitur ini dibuat menggunakan DOM HTML biasa, sehingga sistem generator QR bawaan tidak mampu menyimpannya menjadi gambar `png`.
+
+```mermaid
+sequenceDiagram
+    participant U as User
+    participant App as QRGeneratorLogic
+    participant DOM as HTML UI Frame
+    participant H2C as html2canvas
+    participant Browser as File Download
+    
+    U->>App: Klik "Unduh Gambar"
+    App->>App: Cek: Pakai Bingkai?
+    
+    alt Tanpa Bingkai
+        App->>Browser: Unduh langsung dari Canvas JS (Native)
+    else Memakai Bingkai
+        App->>DOM: Siapkan elemen div #qr-frame-wrapper
+        App->>H2C: Potret elemen DOM ini (Scale: 3x HD)
+        H2C-->>App: Kembalikan Object Canvas Baru
+        App->>Browser: Konversi Canvas ke DataURL & Paksa Klik <a>
+    end
+```
+
+**Penjelasan:**
+Sistem menggunakan modul pembantu eksternal (`html2canvas`) untuk meniru tangkapan layar spesifik pada elemen div bingkai tersebut. Sistem mengaturnya pada skala ketajaman `3x` agar hasil potret DOM tidak terlihat *pixelated* pecah saat dicetak oleh pengguna, menciptakan manipulasi seolah peramban men-*generate* grafis utuh.
 
 ---
 
 ## 3. Inspiro Dashboard (`project/inspiro`)
-Dasbor statis multifungsi yang berjalan penuh menggunakan sistem *grid* dan *charting*. Menjadi bukti kuat kapabilitas OS dalam memuat _heavy frontend_ tanpa mengganggu *thread* UI utama (Main OS), berkat fondasi *Iframe*.
+
+Ini adalah aplikasi pertama yang membuktikan kekuatan OS ini dalam memuat Dasbor tingkat-BUMN (berisi sistem grid rumit, Peta interaktif Leaflet.js, dan berbagai widget lainnya) secara mandiri.
+
+```mermaid
+flowchart LR
+    AppOS(("Main OS (script.js)")) -->|Membuka Jendela| WindowSystem["<app-window>"]
+    WindowSystem -->|Memuat URL| Iframe["iframe src='inspiro/index.html'"]
+    
+    subgraph InspiroSandbox ["Inspiro Iframe Sandbox"]
+        DashboardUI["Dashboard HTML"]
+        Leaflet["Leaflet.js Peta"]
+        Theme["Theme Listener"]
+    end
+    
+    Iframe --> InspiroSandbox
+    Theme -.-> |Disuntik oleh OS| AppOS
+```
+
+Aplikasi ini mencontohkan konsep **Micro-Frontend** murni. Jika kode di dalam Inspiro Dashboard *crash*, maka layar utama (Desktop OS) tidak akan ikut mati atau terkena imbasnya sedikitpun.
