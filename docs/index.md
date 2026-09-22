@@ -3,14 +3,14 @@
 Selamat datang di pusat dokumentasi untuk **AuthntcG Portfolio Website**. Proyek ini telah berevolusi dari sekadar portofolio statis menjadi sebuah **Web OS (Operating System di dalam peramban)** dengan dukungan Jendela Mengambang (Floating Windows), Bento Grid Spatial UI, AI Edge Computing, dan State Persistence.
 
 ## Daftar Isi
-- [Arsitektur Sistem (architecture.md)](./architecture.md) - Penjelasan rinci tentang module pengontrol aplikasi (App, WindowManager, UIManager).
-- [Web Components (web-components.md)](./web-components.md) - Dokumentasi kustom elemen HTML (<app-window>).
+- [Arsitektur Sistem (architecture.md)](./architecture.md) - Penjelasan rinci tentang module pengontrol aplikasi (`App`, `WindowManager`, `UIManager`).
+- [Web Components (web-components.md)](./web-components.md) - Dokumentasi kustom elemen HTML (`<app-window>`).
 - [Alat / Tools (tools.md)](./tools.md) - Dokumentasi sub-aplikasi yang terisolasi di dalam OS (QR Code, AI Object Detection, dll).
 - [Walkthrough (walkthrough.md)](./walkthrough.md) - Rangkuman teknis migrasi sejarah (Bootstrap ke Tailwind, Arsitektur, dll).
 
 ## Gambaran Besar Arsitektur (High-Level Architecture)
 
-`mermaid
+```mermaid
 flowchart TD
     User((User))
 
@@ -36,4 +36,4 @@ flowchart TD
     Desktop -->|Membuka Aplikasi| WindowSystem
     AppCore -->|Inisialisasi & Restore| State
     AppCore -->|Inisialisasi| UI
-`
+```
