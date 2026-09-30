@@ -1,236 +1,170 @@
 <!DOCTYPE html>
 <html lang="en" data-bs-theme="auto">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Home</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"
-        integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
-        integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="anonymous">
-    <link rel="stylesheet" href="../../assets/script/css/style.css">
+    <title>Inspiro Dashboard | AuthntcG</title>
+    <script src="https://cdn.tailwindcss.com?plugins=container-queries,typography"></script>
+    <script>
+        tailwind.config = {
+            darkMode: ['class', '[data-bs-theme="dark"]']
+        }
+    </script>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="anonymous">
+    <script src="https://code.iconify.design/iconify-icon/2.1.0/iconify-icon.min.js"></script>
+    <style>
+        .custom-scrollbar::-webkit-scrollbar { width: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #4b5563; border-radius: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #6b7280; }
+    </style>
+
+    <script>
+        (function() {
+            const savedTheme = localStorage.getItem('authntcg-theme');
+            if (savedTheme) {
+                document.documentElement.setAttribute('data-bs-theme', savedTheme);
+            } else if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+                document.documentElement.setAttribute('data-bs-theme', 'dark');
+            }
+        })();
+    </script>
 </head>
 
-<body>
-    <!-- Preload Page -->
-    <app-preloader class="preload-page">
-        <progress id="loading-bar" value="0" max="100"></progress>
-    </app-preloader>
+<body class="bg-gray-50/50 dark:bg-gray-900/50 text-gray-800 dark:text-gray-200 min-h-screen relative overflow-x-hidden overflow-y-auto custom-scrollbar">
+
+    <!-- Preloader modern -->
+    <div id="preload" class="fixed inset-0 z-50 flex flex-col items-center justify-center bg-gray-50 dark:bg-gray-900 transition-opacity duration-500">
+        <iconify-icon icon="line-md:loading-loop" class="text-4xl text-blue-500 mb-4"></iconify-icon>
+        <p class="text-sm font-medium tracking-widest uppercase animate-pulse">Loading Inspiro...</p>
+    </div>
+
     <!-- Floating Buttons -->
-    <button class="btn btn-settings" data-bs-toggle="modal" data-bs-target="#settingsModal"><i
-            class="bi bi-gear"></i></button>
-    <!-- Clock & Search Area -->
-    <div class="parent container d-flex justify-content-center align-items-center h-100 w-100">
-        <div class="row">
-            <div class="col-12 mb-0">
-                <h1 class="text-start clock">Wait...</h1>
-                <h6 class="pt-0 h-6" id="location-info">
-                    Loading...
+    <button class="fixed top-6 right-6 bg-white/70 dark:bg-gray-800/70 backdrop-blur-xl border border-gray-200/60 dark:border-gray-700/60 shadow-sm rounded-full w-12 h-12 flex items-center justify-center text-xl hover:shadow-md transition-all z-40" data-bs-toggle="modal" data-bs-target="#settingsModal">
+        <iconify-icon icon="fluent:settings-24-regular"></iconify-icon>
+    </button>
+    
+    <button class="fixed top-6 right-20 bg-white/70 dark:bg-gray-800/70 backdrop-blur-xl border border-gray-200/60 dark:border-gray-700/60 shadow-sm rounded-full w-12 h-12 flex items-center justify-center text-xl hover:shadow-md transition-all z-40 text-blue-500" data-bs-toggle="modal" data-bs-target="#infoModal">
+        <iconify-icon icon="fluent:info-24-regular"></iconify-icon>
+    </button>
+
+    <!-- Main Container -->
+    <div class="container mx-auto px-4 flex justify-center items-center min-h-screen w-full py-20">
+        <div class="flex flex-col w-full max-w-4xl gap-4">
+            
+            <!-- Clock & Location -->
+            <div class="w-full text-center sm:text-left px-2">
+                <h1 class="text-6xl sm:text-7xl font-light clock mb-2 tracking-tight">Wait...</h1>
+                <h6 class="text-lg font-medium text-gray-600 dark:text-gray-400 flex items-center justify-center sm:justify-start gap-2" id="location-info">
+                    <iconify-icon icon="line-md:loading-loop"></iconify-icon> Loading Location...
                 </h6>
             </div>
-            <form action="https://www.google.com/search" method="get">
-                <div class="col-12 mb-2">
-                    <div class="card">
-                        <div class="card-body">
-                            <div class="row">
-                                <div class="col-10 px-2">
-                                    <div class="form-floating">
-                                        <input type="text" class="form-control input-mica" name="q"
-                                            placeholder="Search Here..." id="searchInput" required>
-                                        <label for="searchInput">Search for...</label>
-                                    </div>
-                                </div>
-                                <div class="col-2 ps-0 pe-2">
-                                    <app-button type="submit" extra-class="w-100 h-100"><i
-                                            class="bi-search"></i></app-button>
-                                </div>
-                                <div class="col-12 mt-3 mb-2" style="max-height: 10vh;" id="suggestion-panel">
-                                    <div class="row d-flex align-items-center justify-content-center text-center">
-                                        <div class="col-3">
-                                            <a href="https://google.com" class="card">
-                                                <div class="card-body">
-                                                    <i class="bi bi-google" style="font-size: 2vh;"></i>
-                                                </div>
-                                            </a>
-                                        </div>
-                                        <div class="col-3">
-                                            <a href="https://google.com" class="card">
-                                                <div class="card-body">
-                                                    <i class="bi bi-bing" style="font-size: 2vh;"></i>
-                                                </div>
-                                            </a>
-                                        </div>
-                                        <div class="col-3">
-                                            <a href="https://facebook.com" class="card">
-                                                <div class="card-body">
-                                                    <i class="bi bi-facebook" style="font-size: 2vh;"></i>
-                                                </div>
-                                            </a>
-                                        </div>
-                                        <div class="col-3">
-                                            <a href="https://instagram.com" class="card">
-                                                <div class="card-body">
-                                                    <i class="bi bi-instagram" style="font-size: 2vh;"></i>
-                                                </div>
-                                            </a>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
+
+            <!-- Search Area -->
+            <form action="https://www.google.com/search" method="get" class="w-full">
+                <div class="rounded-3xl p-5 shadow-sm border border-gray-200/60 dark:border-gray-700/60 bg-white/70 dark:bg-gray-800/70 backdrop-blur-xl w-full transition-all group hover:shadow-md">
+                    <div class="relative w-full">
+                        <input type="text" class="w-full py-3 pl-12 pr-4 bg-gray-100/50 dark:bg-gray-900/50 border border-transparent focus:border-blue-500/50 rounded-2xl outline-none text-base transition-all" name="q" placeholder="Search for..." id="searchInput" required autocomplete="off">
+                        <iconify-icon icon="fluent:search-24-regular" class="absolute left-4 top-1/2 -translate-y-1/2 text-xl text-gray-500"></iconify-icon>
+                    </div>
+                    
+                    <!-- Suggestions Links -->
+                    <div class="mt-4 pt-4 border-t border-gray-200/60 dark:border-gray-700/60" id="suggestion-panel">
+                        <div class="flex flex-row items-center justify-center gap-4 w-full">
+                            <a href="https://google.com" class="flex-1 flex flex-col items-center justify-center gap-2 py-4 px-2 rounded-2xl bg-white dark:bg-gray-800 shadow-sm border border-gray-100 dark:border-gray-700 hover:shadow-md transition-shadow text-gray-600 dark:text-gray-300">
+                                <iconify-icon icon="logos:google-icon" class="text-3xl"></iconify-icon>
+                            </a>
+                            <a href="https://bing.com" class="flex-1 flex flex-col items-center justify-center gap-2 py-4 px-2 rounded-2xl bg-white dark:bg-gray-800 shadow-sm border border-gray-100 dark:border-gray-700 hover:shadow-md transition-shadow text-gray-600 dark:text-gray-300">
+                                <iconify-icon icon="logos:bing" class="text-3xl"></iconify-icon>
+                            </a>
+                            <a href="https://facebook.com" class="flex-1 flex flex-col items-center justify-center gap-2 py-4 px-2 rounded-2xl bg-white dark:bg-gray-800 shadow-sm border border-gray-100 dark:border-gray-700 hover:shadow-md transition-shadow text-gray-600 dark:text-gray-300">
+                                <iconify-icon icon="logos:facebook" class="text-3xl"></iconify-icon>
+                            </a>
+                            <a href="https://instagram.com" class="flex-1 flex flex-col items-center justify-center gap-2 py-4 px-2 rounded-2xl bg-white dark:bg-gray-800 shadow-sm border border-gray-100 dark:border-gray-700 hover:shadow-md transition-shadow text-gray-600 dark:text-gray-300">
+                                <iconify-icon icon="skill-icons:instagram" class="text-3xl"></iconify-icon>
+                            </a>
                         </div>
                     </div>
                 </div>
             </form>
-            <app-weather-widget class="col-12 mb-2" id="weather-panel"></app-weather-widget>
-        </div>
-    </div>
-    <!-- Settings Modal -->
-    <div class="modal fade" id="settingsModal" tabindex="-1" aria-labelledby="settingsModalLabels" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h2 class="modal-title fs-5" id="settingsModalLabels"><i class="bi bi-gear"></i> Settings</h2>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <div class="row">
-                        <div class="col-sm-12 col-lg-6 mb-2">
-                            <div class="row">
-                                <div class="col-8">
-                                    <p>Hide Weather Panel</p>
-                                </div>
-                                <div class="col-4">
-                                    <div class="form-check form-switch">
-                                        <input class="form-check-input" type="checkbox" role="switch"
-                                            id="switchWeatherPanel" aria-checked="false">
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-sm-12 col-lg-6 mb-2">
-                            <div class="row">
-                                <div class="col-8">
-                                    <p>Hide Suggestion Link Buttons</p>
-                                </div>
-                                <div class="col-4">
-                                    <div class="form-check form-switch">
-                                        <input class="form-check-input" type="checkbox" role="switch"
-                                            id="switchSuggestionPanel" aria-checked="false">
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-sm-12 col-lg-6 mb-2">
-                            <div class="row">
-                                <div class="col-8">
-                                    <p>Options 3</p>
-                                </div>
-                                <div class="col-4">
-                                    <div class="form-check form-switch">
-                                        <input class="form-check-input" type="checkbox" role="switch" id="switch3"
-                                            aria-checked="false">
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                </div>
-            </div>
-        </div>
-    </div>
-    <!-- Information Modal -->
-    <div class="modal fade" id="infoModal" tabindex="-1" aria-labelledby="infoModalLabels" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-scrollable modal-xl modal-dialog-centered modal-dialog-scrollable">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h2 class="modal-title fs-5" id="infoModalLabels"><i class="bi bi-info-circle-fill"></i> Weather &
-                        Location Details</h2>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <div class="row">
-                        <div class="col-12 mb-2">
-                            <h5 class="h5"><i class="bi bi-pin-map"></i> Address Information</h5>
-                        </div>
-                        <div class="col-12 mb-2">
-                            <div class="card">
-                                <div class="card-body">
-                                    <div class="row">
-                                        <div class="col-12 col-lg-4">
-                                            <h6><i class="bi bi-crosshair"></i> Current Location</h6>
-                                        </div>
-                                        <div class="col-12 col-lg-8">
-                                            <p id="infoLocation" class="mb-0"></p>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-12 col-lg-6 mb-2">
-                            <div class="card">
-                                <div class="card-body">
-                                    <div class="row">
-                                        <div class="col-12 col-lg-4">
-                                            <h6><i class="bi bi-arrows"></i> Latitude</h6>
-                                        </div>
-                                        <div class="col-12 col-lg-8">
-                                            <p id="infoLatitude" class="mb-0"></p>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-12 col-lg-6 mb-2">
-                            <div class="card">
-                                <div class="card-body">
-                                    <div class="row">
-                                        <div class="col-12 col-lg-4">
-                                            <h6 class="bi bi-arrows-vertical"> Longitude</h6>
-                                        </div>
-                                        <div class="col-12 col-lg-8">
-                                            <p id="infoLongitude" class="mb-0"></p>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-12 mb-2">
-                            <div class="card">
-                                <div class="card-body">
-                                    <app-map id="infoMaps"></app-map>
-                                </div>
-                            </div>
-                        </div>
-                        <!-- Line Divider and New Titles -->
-                        <div class="col-12 mb-2">
-                            <hr>
-                            <h5 class="h5"><i class="bi bi-thermometer-sun"></i> Weather Forecast</h5>
-                        </div>
-                        <app-weather-details class="col-12"></app-weather-details>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                </div>
-            </div>
-        </div>
-    </div>
-    <app-footer></app-footer>
-</body>
-<script src="https://code.jquery.com/jquery-3.7.1.min.js"
-    integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo=" crossorigin="anonymous"></script>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
-    integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous">
-    </script>
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
-    integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin="anonymous"></script>
-<script src="../../assets/script/js/component.js"></script>
-<script type="module" src="../../assets/script/js/weather-component.js"></script>
-<script type="module" src="../../assets/script/js/script.js"></script>
 
+            <!-- Weather Widget -->
+            <div class="w-full" id="weather-panel">
+                <app-weather-widget class="block rounded-3xl overflow-hidden"></app-weather-widget>
+            </div>
+            
+        </div>
+    </div>
+    
+    <!-- Settings Modal -->
+    <div class="fixed inset-0 z-[100] hidden overflow-y-auto" id="settingsModal" aria-hidden="true">
+        <div class="fixed inset-0 bg-black/40 backdrop-blur-sm transition-opacity" data-bs-dismiss="modal"></div>
+        <div class="flex min-h-full items-center justify-center p-4">
+            <div class="relative w-full max-w-md rounded-3xl p-6 shadow-xl border border-gray-200/60 dark:border-gray-700/60 bg-white/90 dark:bg-gray-800/90 backdrop-blur-xl">
+                <div class="flex items-center justify-between mb-6">
+                    <h2 class="text-xl font-bold flex items-center gap-2"><iconify-icon icon="fluent:settings-24-filled" class="text-blue-500"></iconify-icon> Dashboard Settings</h2>
+                    <button type="button" class="text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 focus:outline-none w-8 h-8 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 flex items-center justify-center transition-colors" data-bs-dismiss="modal"><iconify-icon icon="fluent:dismiss-24-regular"></iconify-icon></button>
+                </div>
+                <div class="space-y-4">
+                    <label class="flex items-center justify-between p-3 rounded-2xl bg-gray-50/50 dark:bg-gray-900/50 hover:bg-gray-100 dark:hover:bg-gray-700/50 transition-colors cursor-pointer border border-gray-200/60 dark:border-gray-700/60">
+                        <span class="font-medium">Hide Weather Panel</span>
+                        <input type="checkbox" id="switchWeatherPanel" class="w-10 h-5 bg-gray-300 dark:bg-gray-600 rounded-full appearance-none checked:bg-blue-500 transition-colors relative after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:w-4 after:h-4 after:bg-white after:rounded-full after:transition-transform checked:after:translate-x-5 shadow-inner">
+                    </label>
+                    <label class="flex items-center justify-between p-3 rounded-2xl bg-gray-50/50 dark:bg-gray-900/50 hover:bg-gray-100 dark:hover:bg-gray-700/50 transition-colors cursor-pointer border border-gray-200/60 dark:border-gray-700/60">
+                        <span class="font-medium">Hide Suggestion Links</span>
+                        <input type="checkbox" id="switchSuggestionPanel" class="w-10 h-5 bg-gray-300 dark:bg-gray-600 rounded-full appearance-none checked:bg-blue-500 transition-colors relative after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:w-4 after:h-4 after:bg-white after:rounded-full after:transition-transform checked:after:translate-x-5 shadow-inner">
+                    </label>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Information Modal -->
+    <div class="fixed inset-0 z-[100] hidden overflow-y-auto" id="infoModal" aria-hidden="true">
+        <div class="fixed inset-0 bg-black/40 backdrop-blur-sm transition-opacity" data-bs-dismiss="modal"></div>
+        <div class="flex min-h-full items-center justify-center p-4">
+            <div class="relative w-full max-w-4xl rounded-3xl p-6 shadow-xl border border-gray-200/60 dark:border-gray-700/60 bg-white/90 dark:bg-gray-800/90 backdrop-blur-xl flex flex-col">
+                <div class="flex items-center justify-between mb-4 pb-4 border-b border-gray-200/60 dark:border-gray-700/60">
+                    <h2 class="text-xl font-bold flex items-center gap-2"><iconify-icon icon="fluent:info-24-filled" class="text-blue-500"></iconify-icon> Environmental Info</h2>
+                    <button type="button" class="text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 focus:outline-none w-8 h-8 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 flex items-center justify-center transition-colors" data-bs-dismiss="modal"><iconify-icon icon="fluent:dismiss-24-regular"></iconify-icon></button>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="bg-gray-100/50 dark:bg-gray-900/50 rounded-2xl p-4 border border-gray-200/60 dark:border-gray-700/60">
+                        <p class="text-xs text-gray-500 mb-1">Full Location</p>
+                        <p id="infoLocation" class="font-medium">Detecting...</p>
+                    </div>
+                    <div class="bg-gray-100/50 dark:bg-gray-900/50 rounded-2xl p-4 border border-gray-200/60 dark:border-gray-700/60">
+                        <p class="text-xs text-gray-500 mb-1">Coordinates</p>
+                        <p class="font-medium">Lat: <span id="infoLatitude"></span> | Lon: <span id="infoLongitude"></span></p>
+                    </div>
+                </div>
+                <div class="w-full h-64 mt-4 rounded-2xl overflow-hidden border border-gray-200/60 dark:border-gray-700/60 relative z-0">
+                    <app-map id="infoMaps" class="w-full h-full block"></app-map>
+                </div>
+                <div class="mt-4 border-t border-gray-200/60 dark:border-gray-700/60 pt-4">
+                    <h3 class="font-bold mb-3">Weather Details</h3>
+                    <app-weather-details></app-weather-details>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin="anonymous"></script>
+    <script src="../../assets/script/js/component.js"></script>
+    <script type="module" src="../../assets/script/js/weather-component.js"></script>
+    <script type="module" src="script.js"></script>
+    <script>
+        // Dismiss preloader safely
+        window.addEventListener('load', () => {
+            const preloader = document.getElementById('preload');
+            if(preloader) {
+                preloader.style.opacity = '0';
+                setTimeout(() => preloader.remove(), 500);
+            }
+        });
+    </script>
+</body>
 </html>
+
+

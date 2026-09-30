@@ -5,66 +5,314 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Home | AuthntcG</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"
-        integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+    <script src="https://cdn.tailwindcss.com?plugins=container-queries,typography"></script>
+    <script>
+        tailwind.config = {
+            darkMode: ['class', '[data-bs-theme="dark"]'],
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#0d6efd',
+                        secondary: '#6c757d',
+                    }
+                }
+            }
+        }
+    </script>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
         integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="anonymous">
     <link rel="stylesheet" href="assets/script/css/style.css">
+    <script src="https://code.iconify.design/iconify-icon/2.1.0/iconify-icon.min.js"></script>
 </head>
 
-<body>
-    <!-- Preload Page -->
-    <app-preloader class="preload-page">
-        <progress id="loading-bar" value="0" max="100"></progress>
-    </app-preloader>
+<body id="desktop-body" class="overflow-hidden relative h-screen w-screen" style="user-select: none;">
+        <!-- OS Lifecycle Screens -->
+    <script>
+                // Mencegah FOUC (Flash of Unstyled Content) saat boot
+        document.addEventListener("DOMContentLoaded", () => {
+            const isBooted = localStorage.getItem('authntcg-booted') === 'true';
+            const internalRefresh = sessionStorage.getItem('authntcg-internal-refresh') === 'true';
+            
+            if (internalRefresh) {
+                // Langsung ke desktop, tidak perlu unhide lockscreen
+            } else if (isBooted) {
+                document.getElementById('os-lock-screen').classList.remove('hidden');
+            } else {
+                document.getElementById('os-boot-screen').classList.remove('hidden');
+            }
+        });
+    </script>
+        <div id="os-boot-screen" class="fixed inset-0 bg-black text-green-500 z-[99999] flex flex-col p-6 font-mono text-xs sm:text-sm hidden overflow-hidden">
+                <!-- Phase 1: CLI -->
+        <style>
+            @keyframes term-blink {
+                0%, 100% { opacity: 1; }
+                50% { opacity: 0; }
+            }
+            .term-cursor {
+                display: inline-block;
+                width: 8px;
+                height: 15px;
+                background-color: #22c55e;
+                vertical-align: middle;
+                animation: term-blink 1s step-end infinite;
+                margin-left: 2px;
+            }
+            #boot-terminal-text {
+                font-family: Consolas, 'Courier New', Courier, monospace;
+                text-shadow: 0 0 2px rgba(34, 197, 94, 0.5);
+            }
+        </style>
+        <div id="boot-terminal-text" class="flex-1 overflow-hidden whitespace-pre-wrap leading-relaxed opacity-100 transition-opacity duration-500"></div>
+        
+        <!-- Phase 2: Modern Boot -->
+        <div id="boot-modern-screen" class="absolute inset-0 flex flex-col items-center justify-center opacity-0 transition-opacity duration-1000 hidden bg-black">
+            <div class="w-24 h-24 rounded-full bg-blue-500 text-white flex items-center justify-center font-bold text-4xl shadow-lg mb-8">A</div>
+            <div class="mt-2">
+                <iconify-icon icon="line-md:loading-twotone-loop" class="text-4xl text-white"></iconify-icon>
+            </div>
+        </div>
+    </div>
+
+    <div id="os-lock-screen" class="fixed inset-0 z-[99998] flex flex-col items-center justify-center hidden transition-transform duration-700 ease-in-out" style="backdrop-filter: blur(25px); -webkit-backdrop-filter: blur(25px); background: rgba(0,0,0,0.3);">
+        <div class="text-white text-center absolute top-24">
+            <h1 id="lock-clock" class="text-7xl font-light mb-2 tracking-tight">10:00</h1>
+            <p id="lock-date" class="text-xl font-medium">Senin, 1 Januari</p>
+        </div>
+        <div class="flex flex-col items-center mt-32">
+            <div class="w-24 h-24 rounded-full bg-blue-500 text-white flex items-center justify-center font-bold text-4xl shadow-lg mb-4">A</div>
+            <h2 class="text-2xl font-bold mb-8">AuthntcG!</h2>
+            <button onclick="BootManager.unlock()" class="px-10 py-2.5 rounded-full bg-white/10 hover:bg-white/25 backdrop-blur-md border border-white/20 text-white font-medium transition-all shadow-lg ring-1 ring-white/10 focus:outline-none focus:ring-2 focus:ring-white">Sign In</button>
+        </div>
+    </div>
+
+    <div id="os-shutdown-screen" class="fixed inset-0 bg-black z-[99999] flex flex-col items-center justify-center hidden text-white transition-opacity duration-1000 opacity-0">
+        <div id="shutdown-spinner" class="mb-5">
+            <iconify-icon icon="line-md:loading-twotone-loop" class="text-6xl text-gray-300"></iconify-icon>
+        </div>
+        <h2 id="shutdown-text" class="text-2xl font-light tracking-wide text-gray-200">Shutting down...</h2>
+    </div>
+
     
-    <!-- Home Area -->
-    <div class="desktop-area">
-        <section class="parent container d-flex justify-content-center align-items-center h-100 w-100">
-            <div class="row">
-                <div class="col-12 d-flex justify-content-center">
-                    <div class="row">
-                        <div class="col-4">
-                            <div class="card">
-                                <div class="card-body">
-                                    <img src="assets/img/avatar.jpg" alt="Thumb" class="img-fluid"
-                                        style="border-radius: 5%; max-width: 500px;  width: 100%; height: 100%; object-fit: cover; ">
-                                </div>
-                            </div>
+    
+
+    <div class="absolute glass-panel rounded-lg shadow-lg py-2 context-menu ctx-hide" style="z-index: 10000;"
+        id="desktop-context-menu">
+        <div class="context-item" onclick="handleMenuAction('change-wallpaper')"><iconify-icon icon="bi:image" class="mr-2 text-inherit"></iconify-icon> Ganti
+            Wallpaper</div>
+        <div class="context-item" onclick="handleMenuAction('toggle-theme')"><iconify-icon icon="fluent:weather-moon-24-regular" class="mr-2 text-inherit"></iconify-icon>
+            Switch Light/Dark</div>
+        <hr class="my-1 border-gray-500 opacity-25">
+        <div class="context-item" onclick="handleMenuAction('refresh-desktop')"><iconify-icon icon="bi:arrow-clockwise" class="mr-2 text-inherit"></iconify-icon> Refresh</div>
+    </div>
+
+    <div class="absolute glass-panel rounded-lg shadow-lg py-2 context-menu ctx-hide" style="z-index: 10000;" id="icon-context-menu">
+        <div class="context-item"><iconify-icon icon="bi:pencil-square" class="mr-2 text-inherit"></iconify-icon> Rename</div>
+        <div class="context-item text-red-500"><iconify-icon icon="bi:trash" class="mr-2 text-inherit"></iconify-icon> Delete Icon</div>
+    </div>
+
+    <div id="desktop-icons-container"
+        class="absolute top-0 left-0 w-full h-full p-3 flex flex-col flex-wrap gap-3 items-start z-10"
+        style="padding-bottom: 80px !important;">
+        <div class="desktop-icon text-center rounded-lg p-2" onclick="WindowManager.openApp('win-about')">
+            <div class="adaptive-icon grad-blue mx-auto mb-1"><iconify-icon icon="bi:person-fill" class="text-white text-3xl text-inherit"></iconify-icon></div>
+            <span class="icon-label text-white text-shadow text-sm">About Author</span>
+        </div>
+        <div class="desktop-icon text-center rounded-lg p-2" onclick="WindowManager.openApp('win-cv')">
+            <div class="adaptive-icon grad-red mx-auto mb-1"><iconify-icon icon="bi:file-earmark-pdf-fill" class="text-white text-3xl text-inherit"></iconify-icon>
+            </div>
+            <span class="icon-label text-white text-shadow text-sm">Resume</span>
+        </div>
+
+    </div>
+
+    <div id="start-menu" class="absolute glass-panel rounded-2xl shadow-lg panel-transition scale-hide flex flex-col" style="z-index: 9999; bottom: 80px; left: 50%; transform: translateX(-50%); width: 700px; max-width: 95vw; height: 550px; max-height: calc(100vh - 100px);">
+        <!-- Modern Search Bar -->
+        <div class="px-6 py-5 border-b border-gray-500/10 dark:border-gray-400/10">
+            <div class="group flex items-center bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 rounded-full overflow-hidden transition-all focus-within:ring-2 focus-within:ring-indigo-500/50 focus-within:border-transparent focus-within:bg-white dark:focus-within:bg-black/50 shadow-inner">
+                <span class="pl-4 pr-2 text-gray-500 group-focus-within:text-indigo-500 transition-colors"><iconify-icon icon="fluent:search-24-filled" class="text-lg"></iconify-icon></span>
+                <input type="text" id="start-search-input" class="w-full bg-transparent outline-none py-2.5 px-2 text-sm text-gray-700 dark:text-gray-200" placeholder="Search apps, settings, and web...">
+            </div>
+        </div>
+        <div class="flex flex-col md:flex-row grow overflow-y-auto md:overflow-hidden p-2 gap-2">
+            <div class="flex-1 overflow-y-auto p-4 glass-scrollbar" style="max-height: 100%;">
+                <div class="flex justify-between items-center mb-4">
+                    <h6 class="uppercase text-xs text-gray-600 dark:text-gray-400 font-bold tracking-wider m-0">Apps</h6>
+                    
+                </div>
+                
+                <div class="grid grid-cols-3 gap-y-4 gap-x-2 w-full" id="pinned-apps-grid">
+                    <!-- App Inspiro -->
+                    <div class="flex flex-col items-center gap-2 p-2 rounded-xl hover:bg-black/5 dark:hover:bg-white/5 cursor-pointer transition-colors group start-app-item" onclick="WindowManager.openApp('win-inspiro')">
+                        <div class="w-12 h-12 rounded-xl grad-green flex items-center justify-center shadow-sm group-hover:shadow-md transition-shadow transform group-hover:-translate-y-1">
+                            <iconify-icon icon="fluent:apps-list-detail-24-filled" class="text-white text-2xl"></iconify-icon>
                         </div>
-                        <section class="col-8 d-flex flex-column justify-content-center">
-                            <header>
-                                <h2>Hi There!</h2>
-                            </header>
-                            <blockquote class="blockquote">
-                                I'm Galih Respati Permana
-                            </blockquote>
-                            <figcaption class="blockquote-footer" style="color: white;">Nice to meet you all</figcaption>
-                            <div class="button-group">
-                                <app-button variant="blue" id="btnAboutWindow">About</app-button>
-                                <app-button variant="red" id="btnCVWindow">Download CV</app-button>
-                            </div>
-                        </section>
+                        <span class="text-xs font-medium text-gray-700 dark:text-gray-200 text-center leading-tight start-app-name">Inspiro</span>
+                    </div>
+                    <!-- App 1 -->
+                    <div class="flex flex-col items-center gap-2 p-2 rounded-xl hover:bg-black/5 dark:hover:bg-white/5 cursor-pointer transition-colors group start-app-item" onclick="WindowManager.openApp('win-obj')">
+                        <div class="w-12 h-12 rounded-xl grad-green flex items-center justify-center shadow-sm group-hover:shadow-md transition-shadow transform group-hover:-translate-y-1">
+                            <iconify-icon icon="fluent:camera-24-filled" class="text-white text-2xl"></iconify-icon>
+                        </div>
+                        <span class="text-xs font-medium text-gray-700 dark:text-gray-200 text-center leading-tight start-app-name">Object<br/>Detection</span>
+                    </div>
+
+                    <!-- App 2 -->
+                    <div class="flex flex-col items-center gap-2 p-2 rounded-xl hover:bg-black/5 dark:hover:bg-white/5 cursor-pointer transition-colors group start-app-item" onclick="WindowManager.openApp('win-qr-gen')">
+                        <div class="w-12 h-12 rounded-xl grad-purple flex items-center justify-center shadow-sm group-hover:shadow-md transition-shadow transform group-hover:-translate-y-1">
+                            <iconify-icon icon="fluent:qr-code-24-filled" class="text-white text-2xl"></iconify-icon>
+                        </div>
+                        <span class="text-xs font-medium text-gray-700 dark:text-gray-200 text-center leading-tight start-app-name">QR<br/>Generator</span>
+                    </div>
+
+                    <!-- App 3 -->
+                    <div class="flex flex-col items-center gap-2 p-2 rounded-xl hover:bg-black/5 dark:hover:bg-white/5 cursor-pointer transition-colors group start-app-item" onclick="WindowManager.openApp('win-about')">
+                        <div class="w-12 h-12 rounded-xl grad-blue flex items-center justify-center shadow-sm group-hover:shadow-md transition-shadow transform group-hover:-translate-y-1">
+                            <iconify-icon icon="fluent:person-24-filled" class="text-white text-2xl"></iconify-icon>
+                        </div>
+                        <span class="text-xs font-medium text-gray-700 dark:text-gray-200 text-center leading-tight start-app-name">About<br/>Author</span>
+                    </div>
+                    
+                    <!-- Settings -->
+                    <div class="flex flex-col items-center gap-2 p-2 rounded-xl hover:bg-black/5 dark:hover:bg-white/5 cursor-pointer transition-colors group start-app-item" onclick="WindowManager.openApp('win-settings')">
+                        <div class="w-12 h-12 rounded-xl bg-gray-200 dark:bg-gray-700 flex items-center justify-center shadow-sm group-hover:shadow-md transition-shadow transform group-hover:-translate-y-1">
+                            <iconify-icon icon="fluent:settings-24-filled" class="text-gray-600 dark:text-gray-300 text-2xl"></iconify-icon>
+                        </div>
+                        <span class="text-xs font-medium text-gray-700 dark:text-gray-200 text-center leading-tight start-app-name">Settings</span>
+                    </div>
+
+                    <!-- Weather Tester -->
+                    <div class="flex flex-col items-center gap-2 p-2 rounded-xl hover:bg-black/5 dark:hover:bg-white/5 cursor-pointer transition-colors group start-app-item" onclick="WindowManager.openApp('win-dev-playground')">
+                        <div class="w-12 h-12 rounded-xl grad-red flex items-center justify-center shadow-sm group-hover:shadow-md transition-shadow transform group-hover:-translate-y-1">
+                            <iconify-icon icon="fluent:beaker-24-filled" class="text-white text-2xl"></iconify-icon>
+                        </div>
+                        <span class="text-xs font-medium text-gray-700 dark:text-gray-200 text-center leading-tight start-app-name">Playground</span>
                     </div>
                 </div>
             </div>
-        </section>
+              <div class="flex-1 overflow-visible md:overflow-auto p-4 rounded-xl bg-black/5 dark:bg-white/5 border border-gray-500/20 flex flex-col gap-3">
+                  <h6 class="uppercase text-xs text-gray-600 dark:text-gray-400 font-bold mb-1 tracking-wider">At a Glance</h6>
+                  
+                  <!-- Weather Widget Redesigned -->
+                  <div id="weather-widget-card" class="p-4 rounded-2xl grad-blue text-white shadow-md relative overflow-hidden cursor-pointer group transition-transform hover:scale-[1.02]" onclick="WindowManager.openApp('win-inspiro')">
+                      <!-- Decorative Background -->
+                      <div class="absolute -right-4 -bottom-4 opacity-10 text-8xl transform group-hover:scale-110 group-hover:rotate-6 transition-transform duration-500">
+                          <iconify-icon icon="fluent:weather-sunny-24-regular" class="weather-icon text-inherit"></iconify-icon>
+                      </div>
+                      
+                      <div class="relative z-10 flex flex-col h-full justify-between gap-4">
+                          <div class="flex justify-between items-start">
+                              <div class="flex items-center gap-2 bg-black/20 rounded-full px-3 py-1 w-max backdrop-blur-md">
+                                  <iconify-icon icon="fluent:location-24-regular" class="text-sm"></iconify-icon>
+                                  <span id="weather-location-name" class="text-xs font-medium tracking-wide">Detecting location...</span>
+                              </div>
+                              <div class="text-3xl text-white drop-shadow-md">
+                                  <iconify-icon icon="fluent:weather-sunny-24-regular" class="weather-icon text-inherit"></iconify-icon>
+                              </div>
+                          </div>
+                          
+                          <div>
+                              <h2 class="text-4xl font-light weather-temp drop-shadow-lg tracking-tight mb-0">--&deg;C</h2>
+                              <div class="flex items-center gap-2 mt-1">
+                                  <span class="text-sm weather-desc font-medium capitalize text-blue-100">Mengambil data...</span>
+                              </div>
+                          </div>
+                      </div>
+                  </div>
+              </div>
+        </div>
+                  <!-- User & Power Footer -->
+          <div class="px-6 py-4 border-t border-gray-500/10 dark:border-gray-400/10 flex justify-between items-center bg-black/5 dark:bg-white/5 rounded-b-2xl">
+              <div class="flex items-center gap-3 hover:bg-black/5 dark:hover:bg-white/5 px-2 py-1.5 -ml-2 rounded-lg transition-colors">
+                  <div class="w-8 h-8 rounded-full bg-gradient-to-tr from-blue-600 to-cyan-500 text-white flex items-center justify-center font-bold text-sm shadow-md">
+                      A
+                  </div>
+                  <div class="flex flex-col">
+                      <span class="text-sm font-semibold text-gray-800 dark:text-gray-200 leading-tight">AuthntcG!</span>
+                      <span class="text-[10px] text-gray-500 leading-tight uppercase font-medium tracking-wider">Administrator</span>
+                  </div>
+              </div>
+              
+              <div class="relative">
+                  <button class="w-9 h-9 flex items-center justify-center rounded-lg hover:bg-red-50 dark:hover:bg-red-900/30 border-0 text-red-500 dark:text-red-400 hover:text-red-600 transition-colors relative" title="Power" onclick="BootManager.togglePowerMenu(event)">
+                      <iconify-icon icon="fluent:power-24-filled" class="text-xl text-inherit"></iconify-icon>
+                  </button>
+                  
+                  <!-- Power Menu Popup -->
+                  <div id="power-menu" class="absolute bg-white/80 dark:bg-gray-800/90 backdrop-blur-xl border border-gray-200/50 dark:border-gray-700/50 rounded-xl shadow-2xl flex flex-col p-1.5 hidden transform transition-all scale-95 opacity-0 origin-bottom-right" style="z-index: 100000; bottom: 100%; right: 0; margin-bottom: 10px; min-width: 160px;">
+                      <button class="flex items-center gap-3 px-3 py-2.5 text-left hover:bg-black/10 dark:hover:bg-white/10 rounded-lg text-sm font-medium transition-colors text-gray-700 dark:text-gray-200" onclick="BootManager.restart()">
+                          <iconify-icon icon="fluent:arrow-counterclockwise-24-regular" class="text-lg"></iconify-icon> Restart
+                      </button>
+                      <button class="flex items-center gap-3 px-3 py-2.5 text-left hover:bg-red-50 dark:hover:bg-red-900/30 rounded-lg text-sm font-medium transition-colors text-red-600 dark:text-red-400" onclick="BootManager.shutdown()">
+                          <iconify-icon icon="fluent:power-24-regular" class="text-lg"></iconify-icon> Shut down
+                      </button>
+                  </div>
+              </div>
+          </div>
     </div>
 
-    <app-footer></app-footer>
-</body>
-<script src="https://code.jquery.com/jquery-3.7.1.min.js"
-    integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo=" crossorigin="anonymous"></script>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
-    integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous">
-    </script>
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
-    integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin="anonymous"></script>
-<script src="assets/script/js/component.js"></script>
-<script type="module" src="assets/script/js/script.js"></script>
-<script type="text/javascript" src="https://unpkg.com/qr-code-styling@1.5.0/lib/qr-code-styling.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-<script src="./assets/script/js/qr-generator.js"></script>
+    <div id="clock-panel" class="absolute glass-panel rounded-2xl shadow-lg panel-transition scale-hide flex flex-col" style="z-index: 9999; bottom: 80px; width: 340px; max-width: calc(100vw - 20px); right: 10px;">
+        <div class="p-4 border-b border-gray-500 border-opacity-25">
+            <h2 class="text-4xl font-light mb-1 text-on-surface" id="panel-time-large">10:00</h2>
+            <p class="text-sm text-on-surface opacity-75 m-0" id="panel-date-large">Senin, 1 Januari</p>
+        </div>
+        
+        <div class="p-4 border-b border-gray-500 border-opacity-25">
+            <div class="flex justify-between items-center mb-3">
+                <h6 class="font-medium text-sm m-0 text-on-surface" id="calendar-month-year">Januari 2023</h6>
+                <div class="flex gap-1">
+                    <button class="btn btn-sm btn-light p-1 rounded hover:bg-black/10 transition-colors" onclick="DesktopUI.changeMonth(-1)"><iconify-icon icon="bi:chevron-up" class="text-inherit"></iconify-icon></button>
+                    <button class="btn btn-sm btn-light p-1 rounded hover:bg-black/10 transition-colors" onclick="DesktopUI.changeMonth(1)"><iconify-icon icon="bi:chevron-down" class="text-inherit"></iconify-icon></button>
+                </div>
+            </div>
+            <div class="grid grid-cols-7 gap-1 text-center text-xs mb-2 font-medium text-on-surface opacity-75">
+                <div>Min</div><div>Sen</div><div>Sel</div><div>Rab</div><div>Kam</div><div>Jum</div><div>Sab</div>
+            </div>
+            <div class="grid grid-cols-7 gap-1 text-center text-sm" id="calendar-days-grid">
+            </div>
+        </div>
+    </div>
 
+        <div id="main-taskbar"
+        class="fixed bottom-0 left-1/2 -translate-x-1/2 mb-3 taskbar-glass rounded-2xl flex items-center p-1.5 shadow-lg justify-between" 
+        style="z-index: 9999; height: 58px; min-width: max-content; max-width: 95vw;">
+        
+        <!-- LEFT: Start Menu & Dynamic Apps -->
+        <div class="flex items-center h-full gap-2" id="taskbar-apps">
+            <button class="p-0 border-0 group hover:opacity-80 rounded-[14px] overflow-hidden ml-0.5"
+                onclick="DesktopUI.toggleStartMenu(event)">
+                <div class="grad-blue flex items-center justify-center shadow-sm rounded-[14px] transition-transform group-hover:scale-105"
+                    style="width: 44px; height: 44px;">
+                    <iconify-icon icon="fluent:apps-24-filled" class="text-white text-2xl text-inherit"></iconify-icon>
+                </div>
+            </button>
+            <div id="taskbar-divider-1" class="w-px bg-gray-400 mx-1 opacity-25" style="height: 28px;"></div>
+            
+            <div id="taskbar-dynamic-apps" class="flex items-center h-full gap-1"></div>
+        </div>
+
+        <!-- RIGHT: Settings & Clock -->
+        <div class="flex items-center h-full gap-1 ml-2 mr-0.5">
+            <div id="taskbar-divider-2" class="w-px bg-gray-400 mx-1 opacity-25 hidden" style="height: 28px;"></div>
+            
+            
+            
+            <button
+                class="hover:bg-black/10 border-0 rounded-[12px] flex flex-col items-center justify-center px-3 h-11 transition-colors"
+                onclick="DesktopUI.toggleClockPanel(event)">
+                <span class="text-sm font-medium" id="taskbar-time" style="line-height: 1.2;">10:00</span>
+                <span style="font-size: 0.65rem; line-height: 1;" id="taskbar-date">24/10/23</span>
+            </button>
+        </div>
+    </div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin="anonymous"></script>
+    <script src="https://unpkg.com/qr-code-styling@1.5.0/lib/qr-code-styling.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    
+    <script src="assets/script/js/component.js"></script>
+    <script src="assets/script/js/qr-generator.js"></script>
+    <script type="module" src="assets/script/js/script.js"></script>
+</body>
 </html>

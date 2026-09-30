@@ -56,29 +56,28 @@ const Preloader = {
         let progress = 0;
 
         // 1. Interval Fake Progress (Maju sampai 90%)
-        const interval = setInterval(() => {
+                const interval = setInterval(() => {
             if (progress < 90) {
                 bar.value = ++progress;
-            } else {
-                clearInterval(interval);
             }
-        }, 15);
-
-        // 2. Window Load Event (Tunggu SEMUA selesai baru 100%)
-        window.addEventListener('load', () => {
-            clearInterval(interval);
-            bar.value = 100;
-            
-            // Delay sedikit untuk efek smooth
+        }, 30);
+        this._interval = interval;
+    },
+    
+    complete() {
+        const bar = document.getElementById('loading-bar');
+        const preload = document.getElementById('preload');
+        if (!preload) return;
+        
+        if(this._interval) clearInterval(this._interval);
+        if (bar) bar.value = 100;
+        
+        setTimeout(() => {
+            preload.classList.add('preload-hidden');
             setTimeout(() => {
-                preload.classList.add('preload-hidden');
-                
-                // Hapus dari display flow setelah transisi selesai
-                setTimeout(() => {
-                    preload.style.display = 'none';
-                }, 500); // Sesuai durasi CSS transition 0.5s
-            }, 300);
-        });
+                preload.style.display = 'none';
+            }, 500);
+        }, 300);
     }
 };
 
@@ -93,21 +92,45 @@ const ThemeService = {
         this.initDynamicBackground();
     },
 
-    initSystemTheme() {
+        initSystemTheme() {
         const updateTheme = () => {
-            const isDarkMode = window.matchMedia("(prefers-color-scheme: dark)").matches;
-            const theme = isDarkMode ? "dark" : "light";
-            document.documentElement.setAttribute("data-bs-theme", theme);
+            const savedTheme = localStorage.getItem('authntcg-theme');
+            if (savedTheme) {
+                document.documentElement.setAttribute("data-bs-theme", savedTheme);
+            } else {
+                const isDarkMode = window.matchMedia("(prefers-color-scheme: dark)").matches;
+                document.documentElement.setAttribute("data-bs-theme", isDarkMode ? "dark" : "light");
+            }
         };
         updateTheme();
-        window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", updateTheme);
+        window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", (e) => {
+            if(!localStorage.getItem('authntcg-theme')) updateTheme();
+        });
+        
+        // Listen to custom event from parent window if toggled
+        window.addEventListener('message', (event) => {
+            if (event.data && event.data.type === 'THEME_CHANGED') {
+                document.documentElement.setAttribute("data-bs-theme", event.data.theme);
+            }
+        });
     },
 
     async initDynamicBackground() {
+        if (window.self !== window.top) {
+            // Windowed Mode: Transparent Background
+            document.body.classList.remove('bg-gray-50/50', 'dark:bg-gray-900/50');
+            document.body.classList.add('bg-transparent');
+            return; // Skip wallpaper loading in windowed mode
+        }
+
         try {
-            const img = await Utils.loadImage(CONFIG.BG.URL);
+            const isDark = document.documentElement.getAttribute('data-bs-theme') === 'dark';
+            const bgUrl = isDark ? 'https://picsum.photos/1920/1080?grayscale&blur=2' : 'https://picsum.photos/1920/1080?blur=1';
+            const cacheBustedUrl = `${bgUrl}&lock=${Date.now()}`;
             
-            document.body.style.backgroundImage = `url('${CONFIG.BG.URL}')`;
+            const img = await Utils.loadImage(cacheBustedUrl);
+            
+            document.body.style.backgroundImage = `url('${cacheBustedUrl}')`;
             document.body.style.backgroundSize = 'cover';
             document.body.style.backgroundPosition = 'center';
             document.body.style.backgroundAttachment = 'fixed';
@@ -172,19 +195,61 @@ const Renderer = {
                 : 'No objects detected.';
         }
 
-        let scaleX = 1, scaleY = 1;
+                let contentW = 0, contentH = 0;
+        let objectFit = 'contain';
+
         if (media instanceof HTMLVideoElement) {
-            scaleX = canvas.width / media.videoWidth;
-            scaleY = canvas.height / media.videoHeight;
+            contentW = media.videoWidth;
+            contentH = media.videoHeight;
+            objectFit = 'contain';
         } else if (media instanceof HTMLImageElement) {
-            scaleX = canvas.width / media.naturalWidth;
-            scaleY = canvas.height / media.naturalHeight;
+            contentW = media.naturalWidth;
+            contentH = media.naturalHeight;
+            objectFit = 'contain';
         }
+
+        const containerW = canvas.width;
+        const containerH = canvas.height;
+        const containerRatio = containerW / containerH;
+        const contentRatio = contentW / contentH;
+        
+        let renderedW = containerW;
+        let renderedH = containerH;
+
+        if (contentW && contentH) {
+            if (objectFit === 'contain') {
+                if (containerRatio > contentRatio) {
+                    renderedH = containerH;
+                    renderedW = containerH * contentRatio;
+                } else {
+                    renderedW = containerW;
+                    renderedH = containerW / contentRatio;
+                }
+            } else if (objectFit === 'cover') {
+                if (containerRatio > contentRatio) {
+                    renderedW = containerW;
+                    renderedH = containerW / contentRatio;
+                } else {
+                    renderedH = containerH;
+                    renderedW = containerH * contentRatio;
+                }
+            }
+        }
+
+        const offsetX = (containerW - renderedW) / 2;
+        const offsetY = (containerH - renderedH) / 2;
+        
+        const scaleX = contentW ? renderedW / contentW : 1;
+        const scaleY = contentH ? renderedH / contentH : 1;
 
         predictions.forEach((pred, idx) => {
             const [x, y, w, h] = pred.bbox;
             const color = this.getColor(idx);
-            const sx = x * scaleX, sy = y * scaleY, sw = w * scaleX, sh = h * scaleY;
+            
+            const sx = (x * scaleX) + offsetX;
+            const sy = (y * scaleY) + offsetY;
+            const sw = w * scaleX;
+            const sh = h * scaleY;
 
             ctx.beginPath();
             ctx.rect(sx, sy, sw, sh);
@@ -257,7 +322,7 @@ const CameraService = {
  * ==========================================
  */
 const App = {
-    state: { mode: 'live', isLooping: false, animationId: null },
+    state: { mode: 'live', isLooping: false, animationId: null, currentImagePredictions: null },
     
     elements: {
         live: {
@@ -268,25 +333,23 @@ const App = {
         },
         video: {
             input: document.getElementById('input-video'),
-            container: document.getElementById('video-container-file'),
-            media: document.getElementById('video-file'),
+                        media: document.getElementById('video-file'),
             canvas: document.getElementById('canvas-video'),
             log: document.getElementById('log-video')
         },
         image: {
             input: document.getElementById('input-image'),
-            container: document.getElementById('image-container-file'),
-            media: document.getElementById('image-file'),
+                        media: document.getElementById('image-file'),
             canvas: document.getElementById('canvas-image'),
             log: document.getElementById('log-image')
         }
     },
 
-    init() {
+        async init() {
         // 1. Jalankan Preloader (Segera)
         Preloader.init();
 
-        // 2. Init Module Lain (Async, tidak memblokir UI loader)
+        // 2. Init Module Lain
         ThemeService.init(); 
         CameraService.init(this.elements.live.video);
         
@@ -296,11 +359,14 @@ const App = {
         this.setupFileEvents();
         window.addEventListener('resize', () => this.handleResize());
 
-        // 4. Start Camera (Di background)
-        this.startLiveMode();
+        // 4. PRE-LOAD MODEL (Tunggu selesai)
+        await ModelService.load();
 
-        // Note: Preloader.hide() akan dipanggil otomatis oleh 
-        // window.addEventListener('load') di dalam Preloader module
+        // 5. Model siap! Sembunyikan preloader
+        Preloader.complete();
+
+        // 6. Start Camera
+        this.startLiveMode();
     },
 
     stopAll() {
@@ -336,11 +402,73 @@ const App = {
         loop();
     },
 
-    setupTabs() {
-        document.querySelectorAll('button[data-bs-toggle="tab"]').forEach(btn => {
-            btn.addEventListener('shown.bs.tab', (e) => {
+        setupTabs() {
+        const tabBtns = document.querySelectorAll('.custom-tab-btn');
+        tabBtns.forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const targetBtn = e.currentTarget;
+                tabBtns.forEach(b => {
+                    b.classList.remove('active', 'bg-blue-50', 'dark:bg-blue-900/20', 'text-blue-600', 'dark:text-blue-400', 'border-blue-200', 'dark:border-blue-800/50');
+                    b.classList.add('hover:bg-gray-50', 'dark:hover:bg-gray-800/50', 'text-gray-600', 'dark:text-gray-400', 'border-transparent', 'hover:border-gray-200', 'dark:hover:border-gray-700');
+                    const iconBg = b.querySelector('.icon-bg');
+                    if (iconBg) {
+                        iconBg.classList.remove('bg-blue-100', 'dark:bg-blue-800/50');
+                        iconBg.classList.add('bg-gray-100', 'dark:bg-gray-800');
+                    }
+                });
+                
+                document.querySelectorAll('.tab-pane').forEach(pane => {
+                    pane.classList.remove('block');
+                    pane.classList.add('hidden');
+                });
+
+                targetBtn.classList.remove('hover:bg-gray-50', 'dark:hover:bg-gray-800/50', 'text-gray-600', 'dark:text-gray-400', 'border-transparent', 'hover:border-gray-200', 'dark:hover:border-gray-700');
+                targetBtn.classList.add('active', 'bg-blue-50', 'dark:bg-blue-900/20', 'text-blue-600', 'dark:text-blue-400', 'border-blue-200', 'dark:border-blue-800/50');
+                const iconBgTarget = targetBtn.querySelector('.icon-bg');
+                if (iconBgTarget) {
+                    iconBgTarget.classList.remove('bg-gray-100', 'dark:bg-gray-800');
+                    iconBgTarget.classList.add('bg-blue-100', 'dark:bg-blue-800/50');
+                }
+                
+                const targetId = targetBtn.getAttribute('data-target');
+                const titleSpan = document.getElementById('current-mode-title');
+                const liveDot = document.getElementById('live-indicator');
+                const btnSwitch = document.getElementById('btn-switch-cam');
+                
+                if (titleSpan) {
+                    if (targetId === '#live') {
+                        titleSpan.textContent = 'Live Camera';
+                        if(liveDot) liveDot.classList.remove('hidden');
+                        if(btnSwitch) { btnSwitch.classList.remove('hidden'); btnSwitch.classList.add('flex'); }
+                    } else if (targetId === '#video') {
+                        titleSpan.textContent = 'Video Analysis';
+                        if(liveDot) liveDot.classList.add('hidden');
+                        if(btnSwitch) { btnSwitch.classList.add('hidden'); btnSwitch.classList.remove('flex'); }
+                    } else if (targetId === '#image') {
+                        titleSpan.textContent = 'Image Analysis';
+                        if(liveDot) liveDot.classList.add('hidden');
+                        if(btnSwitch) { btnSwitch.classList.add('hidden'); btnSwitch.classList.remove('flex'); }
+                    }
+                }
+                
+                const targetPane = document.querySelector(targetId);
+                if (targetPane) {
+                    targetPane.classList.remove('hidden');
+                    targetPane.classList.add('block');
+                }
+                
+                document.querySelectorAll('textarea[id^="log-"]').forEach(log => {
+                    log.classList.remove('block');
+                    log.classList.add('hidden');
+                });
+                const targetLog = document.getElementById('log-' + targetId.replace('#', ''));
+                if (targetLog) {
+                    targetLog.classList.remove('hidden');
+                    targetLog.classList.add('block');
+                }
+
                 this.stopAll();
-                const mode = e.target.getAttribute('data-mode');
+                const mode = targetBtn.getAttribute('data-mode');
                 if (mode === 'live') this.startLiveMode();
                 else this.state.mode = mode;
             });
@@ -358,7 +486,6 @@ const App = {
         this.elements.video.input.addEventListener('change', (e) => {
             const file = e.target.files[0];
             if (file) {
-                this.elements.video.container.style.display = 'flex';
                 this.elements.video.media.src = URL.createObjectURL(file);
                 this.elements.video.media.onplay = () => {
                     this.loopDetection(this.elements.video.media, this.elements.video.canvas, this.elements.video.log);
@@ -367,30 +494,38 @@ const App = {
             }
         });
 
-        // Image
+                // Image
         this.elements.image.input.addEventListener('change', (e) => {
             const file = e.target.files[0];
             if (file) {
-                this.elements.image.container.style.display = 'flex';
-                const img = this.elements.image.media;
-                img.onload = async () => {
-                    Renderer.resizeCanvasToMedia(this.elements.image.canvas, img);
-                    const preds = await ModelService.detect(img);
-                    Renderer.drawPredictions(this.elements.image.canvas, preds, this.elements.image.log, img);
+                const objectUrl = URL.createObjectURL(file);
+                const domImg = this.elements.image.media;
+                const offscreenImg = new Image();
+                offscreenImg.onload = async () => {
+                    domImg.onload = async () => {
+                        Renderer.resizeCanvasToMedia(this.elements.image.canvas, domImg);
+                        const preds = await ModelService.detect(offscreenImg);
+                        this.state.currentImagePredictions = preds;
+                        Renderer.drawPredictions(this.elements.image.canvas, preds, this.elements.image.log, domImg);
+                    };
+                    domImg.src = objectUrl;
                 };
-                img.src = URL.createObjectURL(file);
+                offscreenImg.src = objectUrl;
             }
         });
     },
 
-    handleResize() {
-        if (this.state.mode === 'image' && this.elements.image.media.src) {
-            const img = this.elements.image.media;
-            Renderer.resizeCanvasToMedia(this.elements.image.canvas, img);
-            ModelService.detect(img).then(p => 
-                Renderer.drawPredictions(this.elements.image.canvas, p, this.elements.image.log, img)
-            );
+        handleResize() {
+        if (this.state.resizeFrameId) {
+            cancelAnimationFrame(this.state.resizeFrameId);
         }
+        this.state.resizeFrameId = requestAnimationFrame(() => {
+            if (this.state.mode === 'image' && this.elements.image.media.src && this.state.currentImagePredictions) {
+                const img = this.elements.image.media;
+                Renderer.resizeCanvasToMedia(this.elements.image.canvas, img);
+                Renderer.drawPredictions(this.elements.image.canvas, this.state.currentImagePredictions, this.elements.image.log, img);
+            }
+        });
     }
 };
 

@@ -10,9 +10,9 @@ class AppWeatherWidget extends HTMLElement {
     connectedCallback() {
         // Tampilan skeleton/loading awal
         this.innerHTML = `
-            <div class="card h-100">
-                <div class="card-body d-flex justify-content-center align-items-center">
-                    <div class="spinner-border text-primary" role="status"></div>
+            <div class="rounded-3xl p-5 shadow-sm border border-gray-200/60 dark:border-gray-700/60 bg-white/70 dark:bg-gray-800/70 backdrop-blur-xl transition-all group hover:shadow-md h-full">
+                <div class="flex justify-center items-center h-full min-h-[150px]">
+                    <div class="animate-spin inline-block w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full" role="status"></div>
                 </div>
             </div>
         `;
@@ -25,43 +25,38 @@ class AppWeatherWidget extends HTMLElement {
         const windDir = Utils.getWindDirection(current.wind_direction_10m);
 
         this.innerHTML = `
-        <div class="card">
-            <div class="card-body">
-                <div class="row">
-                    <div class="col-12 mb-2">
-                        <div class="row">
-                            <div class="col-8">
-                                <h5 class="display-5">Weather Info</h5>
-                            </div>
-                            <div class="col-4 d-flex justify-content-end">
-                                <app-button extra-class="btn-info-modal" variant="transparent" data-bs-toggle="modal" data-bs-target="#infoModal" data-latitude="${lat}" data-longitude="${lon}">
-                                    <i class="bi bi-info-circle-fill"></i>
-                                </app-button>
+        <div class="rounded-3xl p-5 shadow-sm border border-gray-200/60 dark:border-gray-700/60 bg-white/70 dark:bg-gray-800/70 backdrop-blur-xl transition-all group hover:shadow-md">
+            <div>
+                <div class="flex flex-wrap -mx-2">
+                    <div class="w-full px-2 mb-2">
+                        <div class="flex items-center">
+                            <div class="w-full">
+                                <h5 class="text-3xl font-light">Weather Info</h5>
                             </div>
                         </div>
                     </div>
-                    <div class="col-12 col-lg-8 mb-2">
-                        <div class="d-flex justify-content-center align-items-center">
-                            <div class="row">
-                                <div class="col-12">
-                                    <p class="${meta.icon} text-center" style="font-size: 10vh; margin-bottom: -15px; font-weight: lighter !important;"></p>
+                    <div class="w-full lg:w-2/3 px-2 mb-4 lg:mb-0">
+                        <div class="flex justify-center items-center h-full">
+                            <div class="flex flex-wrap w-full items-center">
+                                <div class="w-full flex justify-center text-center">
+                                    <iconify-icon icon="${meta.icon}" class="text-7xl font-light mb-[-15px] text-blue-500"></iconify-icon>
                                 </div>
-                                <div class="col">
-                                    <h5 class="text-center">${meta.msg}</h5>
-                                    <p class="text-center text-capitalize">
-                                        <strong>${current.temperature_2m}${units.temperature_2m}</strong>, terasa <strong>${current.apparent_temperature}${units.apparent_temperature}</strong>
+                                <div class="w-full">
+                                    <h5 class="text-center text-xl font-medium mb-1">${meta.msg}</h5>
+                                    <p class="text-center capitalize text-gray-600">
+                                        <strong class="font-bold">${current.temperature_2m}${units.temperature_2m}</strong>, terasa <strong class="font-bold">${current.apparent_temperature}${units.apparent_temperature}</strong>
                                     </p>
                                 </div>
                             </div>
                         </div>
                     </div>
-                    <div class="col-12 col-lg-4">
-                        <div class="row">
-                            <div class="col-6 col-sm-6 col-lg-12 px-1 mb-2 d-none d-sm-none d-md-block">
-                                <div class="card"><div class="card-body"><p class="m-0"><i class="bi bi-info"></i> ${meta.msg}</p></div></div>
+                    <div class="w-full lg:w-1/3 px-2">
+                        <div class="flex flex-wrap lg:flex-col -mx-1 lg:mx-0 hidden md:flex">
+                            <div class="w-1/2 lg:w-full px-1 lg:px-0 mb-2">
+                                <div class="bg-white dark:bg-gray-800/50 dark:bg-gray-800/50 rounded-lg p-3 shadow-sm border border-gray-100 dark:border-gray-700"><p class="m-0 text-sm text-gray-700 dark:text-gray-200"><iconify-icon icon="fluent:info-24-regular" class="mr-1"></iconify-icon> ${meta.msg}</p></div>
                             </div>
-                            <div class="col-6 col-sm-6 col-lg-12 px-1 mb-2 d-none d-sm-none d-md-block">
-                                <div class="card"><div class="card-body"><p class="m-0"><i class="bi bi-wind"></i> ${current.wind_speed_10m} ${units.wind_speed_10m} (${windDir})</p></div></div>
+                            <div class="w-1/2 lg:w-full px-1 lg:px-0 mb-2">
+                                <div class="bg-white dark:bg-gray-800/50 dark:bg-gray-800/50 rounded-lg p-3 shadow-sm border border-gray-100 dark:border-gray-700"><p class="m-0 text-sm text-gray-700 dark:text-gray-200"><iconify-icon icon="fluent:weather-squalls-24-regular" class="mr-1"></iconify-icon> ${current.wind_speed_10m} ${units.wind_speed_10m} (${windDir})</p></div>
                             </div>
                         </div>
                     </div>
@@ -166,15 +161,15 @@ class AppWeatherDetails extends HTMLElement {
             const date = new Date(time);
             if (date.getDate() !== new Date().getDate() || date.getHours() < currentHour) return '';
             const meta = Utils.getWeatherMeta(hourly.weather_code[i]);
-            const isNow = date.getHours() === currentHour ? 'bg-warning text-dark' : '';
+            const isNow = date.getHours() === currentHour ? 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-400 border-yellow-200 dark:border-yellow-700/50' : 'bg-white dark:bg-gray-800 border-gray-100 dark:border-gray-700';
             return `
-                <td class="text-center ${isNow}" style="min-width: 80px; border-radius: 10px;">
-                    <div class="d-flex flex-column align-items-center">
-                        <small style="font-size: 2vh;">${date.getHours()}:00</small>
-                        <i class="${meta.icon}" style="font-size: 5vh;"></i>
-                        <p class="m-0">${hourly.temperature_2m[i]} ${units.temperature_2m}</p>
+                <div class="flex-shrink-0 text-center rounded-xl p-3 border shadow-sm ${isNow} min-w-[80px]">
+                    <div class="flex flex-col items-center">
+                        <small class="text-sm font-medium mb-1">${date.getHours()}:00</small>
+                        <iconify-icon icon="${meta.icon}" class="text-3xl mb-1 text-blue-500"></iconify-icon>
+                        <p class="m-0 text-sm">${hourly.temperature_2m[i]} ${units.temperature_2m}</p>
                     </div>
-                </td>`;
+                </div>`;
         }).join('');
 
         const dailyRows = daily.time.map((time, i) => {
@@ -185,11 +180,11 @@ class AppWeatherDetails extends HTMLElement {
                 month: 'short'
             });
             return `
-                <tr>
-                    <td>${dateStr}</td>
-                    <td><i class="${meta.icon}"></i> ${meta.msg}</td>
-                    <td>${daily.temperature_2m_min[i]}°</td>
-                    <td>${daily.temperature_2m_max[i]}°</td>
+                <tr class="border-b border-gray-100 dark:border-gray-700 last:border-0">
+                    <td class="py-3 px-2 whitespace-nowrap">${dateStr}</td>
+                    <td class="py-3 px-2"><iconify-icon icon="${meta.icon}" class="mr-1 text-gray-500"></iconify-icon> ${meta.msg}</td>
+                    <td class="py-3 px-2 text-right text-blue-500 font-medium">${daily.temperature_2m_min[i]}°</td>
+                    <td class="py-3 px-2 text-right text-red-500 font-medium">${daily.temperature_2m_max[i]}°</td>
                 </tr>`;
         }).join('');
 
@@ -197,25 +192,31 @@ class AppWeatherDetails extends HTMLElement {
         const humanAdviceText = this._generateHumanAdvice(weatherMeta);
 
         this.innerHTML = `
-            <div class="row">
-                <div class="col-12 col-lg-6 mb-2">
-                    <div class="card"><div class="card-body">
-                        <h6><i class="bi bi-calendar-day"></i> Hari Ini (Per Jam)</h6>
-                        <div class="table-responsive mb-2"><table class="table table-borderless"><tbody><tr>${hourlyRows}</tr></tbody></table></div>
-                        <h6><i class="bi bi-calendar-week"></i> Mingguan</h6>
-                        <div class="table-responsive"><table class="table table-borderless">
-                            <thead><tr><th><i class="bi bi-calendar-date"></i></th><th><i class="bi bi-cloud-sun-fill"></i></th><th><i class="bi bi-thermometer-low"></i></th><th><i class="bi bi-thermometer-high"></i></th></tr></thead>
-                            <tbody>${dailyRows}</tbody>
-                        </table></div>
-                    </div></div>
+            <div class="flex flex-wrap -mx-2">
+                <div class="w-full lg:w-1/2 px-2 mb-4">
+                    <div class="rounded-3xl shadow-sm border border-gray-200/60 dark:border-gray-700/60 bg-gray-50/50 dark:bg-gray-900/50 backdrop-blur-md h-full">
+                        <div class="p-5">
+                            <h6 class="text-lg font-medium mb-3"><iconify-icon icon="fluent:calendar-day-24-regular" class="mr-2"></iconify-icon> Hari Ini (Per Jam)</h6>
+                            <div class="flex overflow-x-auto space-x-3 pb-4 mb-4 snap-x">${hourlyRows}</div>
+                            <h6 class="text-lg font-medium mb-3"><iconify-icon icon="fluent:calendar-3-day-24-regular" class="mr-2"></iconify-icon> Mingguan</h6>
+                            <div class="overflow-x-auto">
+                                <table class="w-full text-left text-sm">
+                                    <thead><tr class="text-gray-500 border-b border-gray-200 dark:border-gray-700"><th class="py-2 px-2 font-normal"><iconify-icon icon="fluent:calendar-ltr-24-regular"></iconify-icon></th><th class="py-2 px-2 font-normal"><iconify-icon icon="fluent:weather-partly-cloudy-day-24-filled"></iconify-icon></th><th class="py-2 px-2 font-normal text-right"><iconify-icon icon="fluent:temperature-24-regular"></iconify-icon></th><th class="py-2 px-2 font-normal text-right"><iconify-icon icon="fluent:temperature-24-filled"></iconify-icon></th></tr></thead>
+                                    <tbody>${dailyRows}</tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-                <div class="col-12 col-lg-6 mb-2">
-                    <div class="card"><div class="card-body">
-                        <h6><i class="bi bi-chat-right-text"></i> Summary</h6>
-                        <p>${humanSummaryText}</p>
-                        <h6 class="mt-3"><i class="bi bi-lightbulb"></i> Saran Aktifitas</h6>
-                        <p>${humanAdviceText}</p>
-                    </div></div>
+                <div class="w-full lg:w-1/2 px-2 mb-4">
+                    <div class="rounded-3xl shadow-sm border border-gray-200/60 dark:border-gray-700/60 bg-gray-50/50 dark:bg-gray-900/50 backdrop-blur-md h-full">
+                        <div class="p-5">
+                            <h6 class="text-lg font-medium mb-3 text-blue-600"><iconify-icon icon="fluent:chat-24-regular" class="mr-2"></iconify-icon> Summary</h6>
+                            <p class="text-gray-700 dark:text-gray-200 leading-relaxed">${humanSummaryText}</p>
+                            <h6 class="text-lg font-medium mt-6 mb-3 text-green-600"><iconify-icon icon="fluent:lightbulb-24-regular" class="mr-2"></iconify-icon> Saran Aktifitas</h6>
+                            <p class="text-gray-700 dark:text-gray-200 leading-relaxed">${humanAdviceText}</p>
+                        </div>
+                    </div>
                 </div>
             </div>
         `;
@@ -224,11 +225,11 @@ class AppWeatherDetails extends HTMLElement {
     // Tambahkan di dalam class AppWeatherWidget
     showError(message) {
         this.innerHTML = `
-            <div class="card h-100 border-danger">
-                <div class="card-body d-flex flex-column justify-content-center align-items-center text-danger text-center">
-                    <i class="bi bi-exclamation-triangle-fill mb-2" style="font-size: 3rem;"></i>
-                    <h5 class="card-title">Gagal Memuat Cuaca</h5>
-                    <p class="card-text">${message}</p>
+            <div class="bg-red-50 rounded-xl shadow-sm border border-red-200 h-full">
+                <div class="p-5 flex flex-col justify-center items-center h-full min-h-[150px] text-red-500 text-center">
+                    <iconify-icon icon="fluent:warning-24-filled" class="mb-3 text-5xl"></iconify-icon>
+                    <h5 class="text-xl font-medium mb-2 text-red-700">Gagal Memuat Cuaca</h5>
+                    <p class="text-red-600">${message}</p>
                 </div>
             </div>
         `;

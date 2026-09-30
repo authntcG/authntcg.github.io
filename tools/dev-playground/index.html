@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="auto">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dev Playground</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = { darkMode: ['class', '[data-bs-theme="dark"]'] }
+    </script>
+    <script src="https://code.iconify.design/iconify-icon/2.1.0/iconify-icon.min.js"></script>
+    <script>
+        (function () {
+            const savedTheme = localStorage.getItem('authntcg-theme');
+            if (savedTheme) {
+                document.documentElement.setAttribute('data-bs-theme', savedTheme);
+            } else {
+                const isDarkMode = window.matchMedia('(prefers-color-scheme: dark)').matches;
+                document.documentElement.setAttribute('data-bs-theme', isDarkMode ? 'dark' : 'light');
+            }
+        })();
+    </script>
+    <style>
+        body { background-color: transparent; margin: 0; padding: 0; }
+        .tab-btn { transition: all 0.2s ease; }
+        .tab-btn.active { background-color: rgba(59, 130, 246, 0.1); color: #3b82f6; border-bottom: 2px solid #3b82f6; }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; animation: fadeIn 0.3s ease; }
+        #tab-coming-soon.active { display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+    </style>
+</head>
+<body class="text-gray-800 dark:text-gray-200 h-screen flex flex-col p-4 font-sans">
+
+    <div class="bg-white/80 dark:bg-gray-800/80 backdrop-blur-xl rounded-2xl shadow-sm border border-gray-200/50 dark:border-gray-700/50 flex flex-col h-full overflow-hidden">
+        
+        <!-- Header & Tabs -->
+        <div class="border-b border-gray-200/50 dark:border-gray-700/50">
+            <div class="p-4 pb-2">
+                <h2 class="text-xl font-bold flex items-center gap-2">
+                    <iconify-icon icon="fluent:beaker-24-filled" class="text-blue-500"></iconify-icon> QA Playground
+                </h2>
+                <p class="text-xs text-gray-500 dark:text-gray-400">Pusat pengujian dan manipulasi OS untuk keperluan smoke-test.</p>
+            </div>
+            
+            <div class="flex px-2 mt-1">
+                <button class="tab-btn active px-4 py-2 text-sm font-semibold text-gray-500 hover:text-gray-700 dark:hover:text-gray-300" onclick="switchTab('tab-weather')">
+                    <iconify-icon icon="fluent:weather-partly-cloudy-day-24-regular" class="inline-block align-text-bottom mr-1"></iconify-icon> Weather
+                </button>
+                <button class="tab-btn px-4 py-2 text-sm font-semibold text-gray-500 hover:text-gray-700 dark:hover:text-gray-300" onclick="switchTab('tab-coming-soon')">
+                    <iconify-icon icon="fluent:add-square-24-regular" class="inline-block align-text-bottom mr-1"></iconify-icon> Fitur Baru
+                </button>
+            </div>
+        </div>
+
+        <!-- Tab Contents -->
+        <div class="p-5 flex-1 overflow-y-auto">
+            
+            <!-- Tab: Weather Simulator -->
+            <div id="tab-weather" class="tab-content active">
+                <p class="text-sm mb-4">Pilih cuaca di bawah ini untuk menyuntikkan animasi secara paksa ke dalam Start Menu Widget.</p>
+                <div class="grid grid-cols-2 gap-3">
+                    <button onclick="injectWeather(0)" class="p-3 text-left bg-blue-50 hover:bg-blue-100 dark:bg-blue-900/20 dark:hover:bg-blue-900/40 rounded-xl border border-blue-200 dark:border-blue-800 transition-colors flex flex-col gap-1">
+                        <iconify-icon icon="fluent:weather-sunny-24-filled" class="text-xl text-blue-500"></iconify-icon>
+                        <span class="font-bold text-sm">Cerah</span>
+                        <span class="text-xs opacity-70">Animasi: Matahari</span>
+                    </button>
+                    
+                    <button onclick="injectWeather(2)" class="p-3 text-left bg-gray-50 hover:bg-gray-100 dark:bg-gray-700/30 dark:hover:bg-gray-700/50 rounded-xl border border-gray-200 dark:border-gray-600 transition-colors flex flex-col gap-1">
+                        <iconify-icon icon="fluent:weather-cloudy-24-filled" class="text-xl text-gray-500"></iconify-icon>
+                        <span class="font-bold text-sm">Berawan</span>
+                        <span class="text-xs opacity-70">Animasi: Awan</span>
+                    </button>
+                    
+                    <button onclick="injectWeather(61)" class="p-3 text-left bg-slate-50 hover:bg-slate-100 dark:bg-slate-800/50 dark:hover:bg-slate-700 rounded-xl border border-slate-200 dark:border-slate-600 transition-colors flex flex-col gap-1">
+                        <iconify-icon icon="fluent:weather-rain-24-filled" class="text-xl text-slate-500"></iconify-icon>
+                        <span class="font-bold text-sm">Hujan</span>
+                        <span class="text-xs opacity-70">Animasi: Rintik Hujan</span>
+                    </button>
+                    
+                    <button onclick="injectWeather(95)" class="p-3 text-left bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-900/30 dark:hover:bg-indigo-900/50 rounded-xl border border-indigo-200 dark:border-indigo-800 transition-colors flex flex-col gap-1">
+                        <iconify-icon icon="fluent:weather-thunderstorm-24-filled" class="text-xl text-indigo-500"></iconify-icon>
+                        <span class="font-bold text-sm">Badai Petir</span>
+                        <span class="text-xs opacity-70">Animasi: Badai & Kilat</span>
+                    </button>
+                </div>
+                
+                <button onclick="resetWeather()" class="w-full mt-4 p-3 bg-red-50 hover:bg-red-100 dark:bg-red-900/20 dark:hover:bg-red-900/40 text-red-600 dark:text-red-400 font-bold text-sm rounded-xl transition-colors border border-red-200 dark:border-red-800 flex justify-center items-center gap-2">
+                    <iconify-icon icon="fluent:arrow-sync-24-regular"></iconify-icon> Kembalikan ke Cuaca Asli
+                </button>
+            </div>
+
+            <!-- Tab: Coming Soon / Future Tests -->
+            <div id="tab-coming-soon" class="tab-content h-full text-center py-10 opacity-70">
+                <iconify-icon icon="fluent:rocket-24-regular" class="text-6xl text-gray-400 mb-4"></iconify-icon>
+                <h3 class="text-lg font-bold mb-2">Modul Pengujian Belum Tersedia</h3>
+                <p class="text-sm max-w-xs">Setiap kali ada fitur baru yang dikembangkan pada OS ini, modul pengujiannya akan ditambahkan ke dalam tab baru di sini.</p>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        // Tab System
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active', 'dark:text-white', 'text-gray-900'));
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+            
+            event.currentTarget.classList.add('active', 'dark:text-white', 'text-gray-900');
+            document.getElementById(tabId).classList.add('active');
+        }
+
+        // Weather Simulator logic
+        function getWeatherMeta(code) {
+            const map = {
+                0: { icon: 'fluent:weather-sunny-24-filled', msg: 'Cerah', bg: 'linear-gradient(to bottom right, #3b82f6, #06b6d4)', anim: 'weather-anim-sun' },
+                2: { icon: 'fluent:weather-cloudy-24-filled', msg: 'Berawan', bg: 'linear-gradient(to bottom right, #9ca3af, #d1d5db)', anim: 'weather-anim-clouds' },
+                61: { icon: 'fluent:weather-rain-24-filled', msg: 'Hujan Ringan', bg: 'linear-gradient(to bottom right, #475569, #64748b)', anim: 'weather-anim-rain' },
+                95: { icon: 'fluent:weather-thunderstorm-24-filled', msg: 'Badai Petir', bg: 'linear-gradient(to bottom right, #0f172a, #1e293b)', anim: 'weather-anim-storm' }
+            };
+            return map[code];
+        }
+
+        function injectWeather(code) {
+            if (window.parent && window.parent.document) {
+                const meta = getWeatherMeta(code);
+                
+                // Update Desktop Widget
+                const doc = window.parent.document;
+                const widget = doc.getElementById('weather-widget-card');
+                const descEls = doc.querySelectorAll('.weather-desc');
+                const iconEls = doc.querySelectorAll('.weather-icon');
+                
+                if (widget) {
+                    widget.style.background = meta.bg;
+                    widget.classList.remove('weather-anim-sun', 'weather-anim-clouds', 'weather-anim-rain', 'weather-anim-storm');
+                    if (meta.anim) widget.classList.add(meta.anim);
+                }
+                
+                descEls.forEach(el => el.textContent = "[TES] " + meta.msg);
+                iconEls.forEach(el => el.setAttribute('icon', meta.icon));
+            } else {
+                alert("Simulator hanya berfungsi jika dijalankan dari dalam OS (Iframe).");
+            }
+        }
+        
+        function resetWeather() {
+            if (window.parent && window.parent.DesktopUI) {
+                window.parent.DesktopUI.startGeoTracking();
+            }
+        }
+        
+        // Listen for theme changes from parent OS
+        window.addEventListener('message', (event) => {
+            if (event.data && event.data.type === 'THEME_CHANGED') {
+                document.documentElement.setAttribute("data-bs-theme", event.data.theme);
+            }
+        });
+        
+        // Environment Check: if standalone, set wallpaper background
+        if (window.self === window.top) {
+            document.body.style.backgroundImage = "url('../../assets/image/bg.jpg')";
+            document.body.style.backgroundSize = "cover";
+            document.body.style.backgroundPosition = "center";
+            document.body.classList.add('bg-black/50', 'bg-blend-overlay');
+        }
+    </script>
+</body>
+</html>
