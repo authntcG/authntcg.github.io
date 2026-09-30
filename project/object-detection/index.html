@@ -5,9 +5,18 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Object Detection | AuthntcG</title>
   <script src="https://cdn.tailwindcss.com?plugins=container-queries,typography"></script>
+  <script>
+      tailwind.config = {
+          darkMode: ['class', '[data-bs-theme="dark"]']
+      }
+  </script>
   <link rel="stylesheet" href="style.css" />
   <script src="https://code.iconify.design/iconify-icon/2.1.0/iconify-icon.min.js"></script>
   <style>
+    /* Tailwind CDN Fallback for FOUC Prevention */
+    [data-bs-theme="dark"] #preload { background-color: #111827 !important; color: #e5e7eb !important; }
+    [data-bs-theme="light"] #preload { background-color: #f9fafb !important; color: #1f2937 !important; }
+    
     /* Custom Scrollbar */
     .custom-scrollbar::-webkit-scrollbar {
         width: 4px;
@@ -23,16 +32,27 @@
         background: #6b7280;
     }
   </style>
+  <script>
+      (function () {
+          const savedTheme = localStorage.getItem('authntcg-theme');
+          if (savedTheme) {
+              document.documentElement.setAttribute('data-bs-theme', savedTheme);
+          } else {
+              const isDarkMode = window.matchMedia('(prefers-color-scheme: dark)').matches;
+              document.documentElement.setAttribute('data-bs-theme', isDarkMode ? 'dark' : 'light');
+          }
+      })();
+  </script>
 </head>
 
-<body class="bg-gray-50/50 dark:bg-gray-900/50 text-gray-800 dark:text-gray-200 @container min-h-screen">
+<body class="bg-gray-50/50 dark:bg-gray-900/50 text-gray-800 dark:text-gray-200 @container h-screen w-screen overflow-hidden flex flex-col">
   <div id="preload" class="preload-page flex flex-col items-center justify-center bg-gray-50 dark:bg-gray-900 absolute inset-0 z-50">
       <iconify-icon icon="line-md:loading-loop" class="text-4xl text-blue-500 mb-4"></iconify-icon>
-      <p class="text-sm font-medium tracking-widest uppercase animate-pulse">Loading Model...</p>
+      <p class="text-sm font-medium tracking-widest uppercase animate-pulse text-gray-800 dark:text-gray-200">Loading Model...</p>
       <progress id="loading-bar" value="0" max="100" class="hidden"></progress>
   </div>
 
-  <div class="p-4 @lg:p-6 max-w-7xl mx-auto space-y-4 h-full flex flex-col">
+  <div class="p-4 @lg:p-6 max-w-7xl w-full mx-auto space-y-4 flex-grow flex flex-col h-full overflow-y-auto custom-scrollbar">
         <!-- HEADER -->
     <div class="flex items-center justify-between mb-4 shrink-0">
        <div class="flex items-center gap-3">
@@ -71,7 +91,7 @@
              
              <!-- LIVE -->
              <div id="live" class="tab-pane absolute inset-0 w-full h-full block">
-                <video id="webcam" autoplay playsinline muted class="w-full h-full object-cover"></video>
+                <video id="webcam" autoplay playsinline muted class="w-full h-full object-contain"></video>
                 <canvas id="canvas-live" class="absolute top-0 left-0 w-full h-full pointer-events-none"></canvas>
              </div>
              
@@ -149,5 +169,6 @@
   <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.10.0"></script>
   <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/coco-ssd"></script>
   <script src="script.js"></script>
+  
 </body>
 </html>

@@ -1,46 +1,3 @@
-class AppPreloader extends HTMLElement {
-    static CONFIG = {
-        ANIMATION_SPEED_MS: 15,
-        MAX_FAKE_PROGRESS: 90,
-        FADE_OUT_DURATION_MS: 500,
-        DELAY_BEFORE_CLOSE_MS: 200
-    };
-
-    connectedCallback() {
-        setTimeout(() => {
-            this.initLogic();
-        }, 0);
-    }
-    
-    initLogic() {
-        this.bar = this.querySelector('#loading-bar');
-        this.progress = 0;
-
-        if (this.bar) {
-            this.interval = setInterval(() => {
-                if (this.progress < AppPreloader.CONFIG.MAX_FAKE_PROGRESS) {
-                    this.progress++;
-                    this.bar.value = this.progress;
-                }
-            }, AppPreloader.CONFIG.ANIMATION_SPEED_MS);
-        }
-
-        window.addEventListener('app:ready', () => this.hide());
-    }
-
-    hide() {
-        if (this.interval) clearInterval(this.interval);
-        if (this.bar) this.bar.value = 100;
-        
-        setTimeout(() => {
-            this.classList.add('preload-hidden');
-            setTimeout(() => {
-                this.style.display = 'none';
-            }, AppPreloader.CONFIG.FADE_OUT_DURATION_MS); 
-        }, AppPreloader.CONFIG.DELAY_BEFORE_CLOSE_MS); 
-    }
-}
-
 class AppFooter extends HTMLElement {
     connectedCallback() {
         const year = new Date().getFullYear();
@@ -704,5 +661,4 @@ class AppWindow extends HTMLElement {
 customElements.define('app-window', AppWindow);
 customElements.define('app-map', AppMap);
 customElements.define('app-button', AppButton);
-customElements.define('app-preloader', AppPreloader);
 customElements.define('app-footer', AppFooter);

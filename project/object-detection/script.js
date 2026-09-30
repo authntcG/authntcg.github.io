@@ -116,10 +116,21 @@ const ThemeService = {
     },
 
     async initDynamicBackground() {
+        if (window.self !== window.top) {
+            // Windowed Mode: Transparent Background
+            document.body.classList.remove('bg-gray-50/50', 'dark:bg-gray-900/50');
+            document.body.classList.add('bg-transparent');
+            return; // Skip wallpaper loading in windowed mode
+        }
+
         try {
-            const img = await Utils.loadImage(CONFIG.BG.URL);
+            const isDark = document.documentElement.getAttribute('data-bs-theme') === 'dark';
+            const bgUrl = isDark ? 'https://picsum.photos/1920/1080?grayscale&blur=2' : 'https://picsum.photos/1920/1080?blur=1';
+            const cacheBustedUrl = `${bgUrl}&lock=${Date.now()}`;
             
-            document.body.style.backgroundImage = `url('${CONFIG.BG.URL}')`;
+            const img = await Utils.loadImage(cacheBustedUrl);
+            
+            document.body.style.backgroundImage = `url('${cacheBustedUrl}')`;
             document.body.style.backgroundSize = 'cover';
             document.body.style.backgroundPosition = 'center';
             document.body.style.backgroundAttachment = 'fixed';
@@ -190,7 +201,7 @@ const Renderer = {
         if (media instanceof HTMLVideoElement) {
             contentW = media.videoWidth;
             contentH = media.videoHeight;
-            objectFit = media.id === 'webcam' ? 'cover' : 'contain';
+            objectFit = 'contain';
         } else if (media instanceof HTMLImageElement) {
             contentW = media.naturalWidth;
             contentH = media.naturalHeight;
@@ -322,15 +333,13 @@ const App = {
         },
         video: {
             input: document.getElementById('input-video'),
-            container: document.getElementById('video-container-file'),
-            media: document.getElementById('video-file'),
+                        media: document.getElementById('video-file'),
             canvas: document.getElementById('canvas-video'),
             log: document.getElementById('log-video')
         },
         image: {
             input: document.getElementById('input-image'),
-            container: document.getElementById('image-container-file'),
-            media: document.getElementById('image-file'),
+                        media: document.getElementById('image-file'),
             canvas: document.getElementById('canvas-image'),
             log: document.getElementById('log-image')
         }
@@ -477,7 +486,6 @@ const App = {
         this.elements.video.input.addEventListener('change', (e) => {
             const file = e.target.files[0];
             if (file) {
-                this.elements.video.container.style.display = 'flex';
                 this.elements.video.media.src = URL.createObjectURL(file);
                 this.elements.video.media.onplay = () => {
                     this.loopDetection(this.elements.video.media, this.elements.video.canvas, this.elements.video.log);
@@ -508,11 +516,16 @@ const App = {
     },
 
         handleResize() {
-        if (this.state.mode === 'image' && this.elements.image.media.src && this.state.currentImagePredictions) {
-            const img = this.elements.image.media;
-            Renderer.resizeCanvasToMedia(this.elements.image.canvas, img);
-            Renderer.drawPredictions(this.elements.image.canvas, this.state.currentImagePredictions, this.elements.image.log, img);
+        if (this.state.resizeFrameId) {
+            cancelAnimationFrame(this.state.resizeFrameId);
         }
+        this.state.resizeFrameId = requestAnimationFrame(() => {
+            if (this.state.mode === 'image' && this.elements.image.media.src && this.state.currentImagePredictions) {
+                const img = this.elements.image.media;
+                Renderer.resizeCanvasToMedia(this.elements.image.canvas, img);
+                Renderer.drawPredictions(this.elements.image.canvas, this.state.currentImagePredictions, this.elements.image.log, img);
+            }
+        });
     }
 };
 

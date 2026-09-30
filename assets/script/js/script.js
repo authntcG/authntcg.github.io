@@ -1,6 +1,18 @@
 import {
     AppConfig
 } from './config.js';
+import { Utils } from './utils.js';
+
+const AppRegistry = {
+    'win-settings': { id: 'win-settings', title: 'System Settings', icon: 'fluent:settings-24-regular', url: 'tools/settings/index.html', defaultWidth: '700px', defaultHeight: '550px' },
+    'win-inspiro': { id: 'win-inspiro', title: 'Inspiro Dashboard', icon: 'bi:speedometer2', url: 'project/inspiro/index.html', defaultWidth: '1000px', defaultHeight: '600px' },
+    'win-obj': { id: 'win-obj', title: 'Object Detection', icon: 'fluent:camera-24-regular', url: 'project/object-detection/index.html', defaultWidth: '900px', defaultHeight: '650px' },
+    'win-about': { id: 'win-about', title: 'About Galih Respati', icon: 'fluent:person-24-regular', url: 'about.html', defaultWidth: '750px', defaultHeight: '550px' },
+    'win-qr-gen': { id: 'win-qr-gen', title: 'QR Code Generator', icon: 'bi:qr-code', url: 'project/qr-code-generator/index.html', defaultWidth: '450px', defaultHeight: '750px' },
+    'win-cv': { id: 'win-cv', title: 'CV Galih Respati', icon: 'fluent:document-pdf-24-regular', url: 'https://drive.google.com/file/d/1kvOwc1pDQl5EyGQh9Kmcjpa-XwGpEkeJ/preview', defaultWidth: '800px', defaultHeight: '600px' },
+    'win-dev-playground': { id: 'win-dev-playground', title: 'Dev Playground', icon: 'fluent:beaker-24-regular', url: 'tools/dev-playground/index.html', defaultWidth: '600px', defaultHeight: '500px' },
+    'win-vyloserve': { id: 'win-vyloserve', title: 'VyloServe', icon: 'fluent:box-24-regular', url: 'project/vyloserve/index.html', defaultWidth: '900px', defaultHeight: '650px' }
+};
 
 /**
  * Module: Window Manager (Custom Implementation)
@@ -22,8 +34,24 @@ const WindowManager = {
      * @param {string} options.url - (Opsional) URL untuk mode Iframe (PDF, Web, Blob)
      * @param {string} options.htmlContent - (Opsional) Teks HTML untuk mode Snippet (Gambar, Video, UI)
      */
-        openWindow(options) {
-        const { id, title, url, htmlContent, width, height, x, y } = options;
+    
+    openApp(appId, state = null) {
+        const appDef = AppRegistry[appId];
+        if (!appDef) return;
+        this.openWindow({
+            id: appDef.id,
+            title: appDef.title,
+            icon: appDef.icon,
+            url: appDef.url,
+            width: state?.width || appDef.defaultWidth,
+            height: state?.height || appDef.defaultHeight,
+            x: state?.x, y: state?.y
+        });
+    },
+
+    openWindow(options) {
+        const { id, title, icon, url, htmlContent, width, height, x, y } = options;
+
 
         let win = id ? document.getElementById(id) : null;
         if (win) {
@@ -38,6 +66,7 @@ const WindowManager = {
         win = document.createElement('app-window');
         if (id) win.id = id;
         win.setAttribute('title', title || 'New Window');
+        if (icon) win.setAttribute('icon', icon);
         if (width) win.setAttribute('width', width);
         if (height) win.setAttribute('height', height);
         if (x) win.setAttribute('x', x);
@@ -82,18 +111,7 @@ const WindowManager = {
             for (const state of windows) {
                 if (state.display === 'none') continue; // Optional: restore minimized as well?
                 
-                // We use a small registry to spawn the right app
-                if (state.id === 'win-inspiro') {
-                    this.openWindow({ id: 'win-inspiro', title: 'Inspiro Dashboard', url: 'project/inspiro/index.html', width: state.width, height: state.height, x: state.x, y: state.y });
-                } else if (state.id === 'win-obj') {
-                    this.openWindow({ id: 'win-obj', title: 'Object Detection', url: 'project/object-detection/index.html', width: state.width, height: state.height, x: state.x, y: state.y });
-                } else if (state.id === 'win-about') {
-                    this.openAbout(state);
-                } else if (state.id === 'win-qr-gen') {
-                    this.openQRGenerator(state);
-                } else if (state.id === 'win-cv') {
-                    this.openPDF(state);
-                }
+                this.openApp(state.id, state);
                 
                 // After spawning, force coordinates just in case the component didn't catch them
                 setTimeout(() => {
@@ -154,38 +172,9 @@ const WindowManager = {
     //     });
     // },
 
-            openAbout(state = null) {
-        this.openWindow({
-            id: 'win-about',
-            title: 'About Galih Respati',
-            url: 'about.html',
-            width: state?.width || '750px',
-            height: state?.height || '550px',
-            x: state?.x, y: state?.y
-        });
-    },
-
-        openPDF(state = null) {
-        this.openWindow({
-            id: 'win-cv',
-            title: 'CV Galih Respati',
-            url: 'https://drive.google.com/file/d/1kvOwc1pDQl5EyGQh9Kmcjpa-XwGpEkeJ/preview',
-            width: state?.width || '800px', height: state?.height || '600px',
-            x: state?.x, y: state?.y
-        });
-    },
-
-            openQRGenerator(state = null) {
-        this.openWindow({
-            id: 'win-qr-gen',
-            title: 'QR Code Generator',
-            url: 'project/qr-code-generator/index.html',
-            width: state?.width || '450px',
-            height: state?.height || '750px',
-            x: state?.x, y: state?.y
-        });
-    },
-
+        
+    
+        
         updateTaskbar() {
         const taskbarDynamic = document.getElementById('taskbar-dynamic-apps');
         if (!taskbarDynamic) return;
@@ -203,8 +192,9 @@ const WindowManager = {
         windows.forEach(win => {
             const btn = document.createElement('button');
             btn.className = 'w-10 h-10 flex flex-col items-center justify-center hover:bg-black/10 rounded-lg mx-1 relative transition-colors border-0';
+            const appIcon = win.getAttribute('icon') || 'fluent:window-apps-24-regular';
             btn.innerHTML = `
-                <iconify-icon icon="fluent:window-apps-24-regular" class="text-blue-500 text-xl text-inherit"></iconify-icon>
+                <iconify-icon icon="${appIcon}" class="text-blue-500 text-xl text-inherit"></iconify-icon>
                 <div class="absolute bottom-0.5 left-1/2 -translate-x-1/2 bg-blue-500 rounded-full w-3 h-[3px]"></div>
             `;
             btn.title = win.getAttribute('title');
@@ -238,8 +228,6 @@ const WindowManager = {
 const UIManager = {
     async init() {
         this.initTheme();
-        this.initClock();
-        this.loadPanelState();
         this.setupEventListeners();
 
         await this.initDynamicBackground();
@@ -311,66 +299,17 @@ const UIManager = {
         updateTheme();
     },
 
-    initClock() {
-        const update = () => {
-            const now = new Date();
-            const timeString = now.toLocaleTimeString('en-US', {
-                hour12: false
-            });
-            const period = now.getHours() >= 12 ? 'PM' : 'AM';
-            const clockEl = document.querySelector('.clock');
-            if (clockEl) clockEl.innerHTML = `${timeString} <span class='clock-period'>${period}</span>`;
-        };
-        update();
-        setInterval(update, 1000);
-    },
-
-    loadPanelState() {
-        const panels = [{
-                switch: 'switchWeatherPanel',
-                panel: 'weather-panel',
-                key: 'isWeatherHidden'
-            },
-            {
-                switch: 'switchSuggestionPanel',
-                panel: 'suggestion-panel',
-                key: 'isSuggestionHidden'
-            }
-        ];
-
-        panels.forEach(({
-            switch: swId,
-            panel: pId,
-            key
-        }) => {
-            const switchEl = document.getElementById(swId);
-            const panelEl = document.getElementById(pId);
-            const isHidden = sessionStorage.getItem(key) === 'true';
-
-            if (switchEl && panelEl) {
-                switchEl.checked = isHidden;
-                panelEl.toggleAttribute('hidden', isHidden);
-
-                switchEl.addEventListener('change', () => {
-                    const hidden = switchEl.checked;
-                    panelEl.toggleAttribute('hidden', hidden);
-                    sessionStorage.setItem(key, hidden);
-                });
-            }
-        });
-    },
-
     setupEventListeners() {
         const infoModal = document.getElementById('infoModal');
         const btnAbout = document.getElementById('btnAboutWindow');
         const btnCV = document.getElementById('btnCVWindow');
 
         if (btnCV) {
-            btnCV.addEventListener('click', () => WindowManager.openPDF());
+            btnCV.addEventListener('click', () => WindowManager.openApp('win-cv'));
         }
         
         if (btnAbout) {
-            btnAbout.addEventListener('click', () => WindowManager.openAbout());
+            btnAbout.addEventListener('click', () => WindowManager.openApp('win-about'));
         }
 
         if (infoModal) {
@@ -429,77 +368,236 @@ const UIManager = {
 /**
  * Module: Data Service (Weather & Location)
  */
-const WeatherService = {
-    async fetchWeather(lat, lon) {
-        const params = new URLSearchParams({
-            latitude: lat,
-            longitude: lon,
-            current: 'temperature_2m,apparent_temperature,precipitation,weather_code,surface_pressure,wind_speed_10m,wind_direction_10m',
-            hourly: 'temperature_2m,weather_code,uv_index',
-            daily: 'weather_code,temperature_2m_max,temperature_2m_min,uv_index_max',
-            timezone: 'auto'
-        });
-
-        try {
-            const response = await fetch(`${AppConfig.WEATHER.API_METEO}?${params}`);
-            if (!response.ok) throw new Error('Weather API Error');
-            const data = await response.json();
-
-            // Di dalam WeatherService.fetchWeather:
-            const widget = document.getElementById('weather-panel');
-            const details = document.querySelector('app-weather-details');
-
-            // Tambahkan lat, lon saat memanggil widget.updateData
-            if (widget && widget.updateData) widget.updateData(data.current, data.current_units, lat, lon);
-            if (details && details.updateData) details.updateData(data.current, data.hourly, data.daily, data.current_units);
-
-        } catch (err) {
-            console.error('Weather Fetch Error:', err);
-            // Tangkap komponen widget dan tampilkan error ke layar pengguna
-            const widget = document.getElementById('weather-panel');
-            if (widget && widget.showError) {
-                widget.showError("Periksa koneksi internetmu atau coba lagi nanti.");
-            }
-        }
-    },
-
-    async fetchLocationName(lat, lon) {
-        try {
-            const url = `${AppConfig.WEATHER.API_GEOCODE}?latitude=${lat}&longitude=${lon}&localityLanguage=id`;
-            const response = await fetch(url);
-            if (!response.ok) throw new Error(`Geocode API Error: ${response.status}`);
-
-            const data = await response.json();
-            const cityName = data.city || data.locality || data.principalSubdivision || 'Lokasi';
-            const fullLocation = `${data.locality || ''}, ${data.principalSubdivision || ''}, ${data.countryName || ''}`;
-
-            // KODE BARU (Vanilla JS)
-            const locInfo = document.getElementById('location-info');
-            const infoLoc = document.getElementById('infoLocation');
-            const infoLat = document.getElementById('infoLatitude');
-            const infoLon = document.getElementById('infoLongitude');
-
-            if (locInfo) locInfo.innerHTML = `<i class="bi bi-geo"></i> ${cityName}`;
-            if (infoLoc) infoLoc.textContent = fullLocation;
-            if (infoLat) infoLat.textContent = lat;
-            if (infoLon) infoLon.textContent = lon;
-
-            // Catatan: Baris $('#btnInfo').attr(...) kita HAPUS total!
-            // Karena kita sudah menangani datanya di app-weather-widget
-
-        } catch (err) {
-            console.error('Location Fetch Error:', err);
-            const locInfo = document.getElementById('location-info');
-            if (locInfo) locInfo.innerHTML = `<i class="bi bi-geo-alt-fill"></i> Gagal Memuat Lokasi`;
-        }
-    }
-};
-
 /**
  * Main App Controller
  */
+
+/**
+ * Module: BootManager
+ * Menangani siklus hidup OS: Boot, Lockscreen, Shutdown, Restart.
+ */
+const BootManager = {
+    init() {
+        window.BootManager = this;
+        this.bootScreen = document.getElementById('os-boot-screen');
+        this.lockScreen = document.getElementById('os-lock-screen');
+        this.shutdownScreen = document.getElementById('os-shutdown-screen');
+        this.powerMenu = document.getElementById('power-menu');
+        this.termText = document.getElementById('boot-terminal-text');
+        
+        // Update jam lockscreen
+        this.updateLockClock();
+        setInterval(() => this.updateLockClock(), 1000);
+
+        // Disembunyikan oleh inline script index.html atau akan diputuskan saat app:ready
+        window.addEventListener('app:ready', () => {
+            const isBooted = localStorage.getItem('authntcg-booted') === 'true';
+            if (isBooted) {
+                // Hapus background hitam lockscreen secara halus saat UI belakang sudah siap
+                this.bootScreen.classList.add('hidden');
+                this.lockScreen.style.background = 'rgba(0,0,0,0.1)'; 
+            } else {
+                this.playBootSequence();
+            }
+        });
+        
+        // Tutup power menu jika klik di luar
+        document.addEventListener('click', (e) => {
+            if (this.powerMenu && !this.powerMenu.classList.contains('hidden')) {
+                if (!e.target.closest('#power-menu') && !e.target.closest('[title="Power"]')) {
+                    this.hidePowerMenu();
+                }
+            }
+        });
+    },
+
+    updateLockClock() {
+        const lockClock = document.getElementById('lock-clock');
+        const lockDate = document.getElementById('lock-date');
+        if (!lockClock || !lockDate) return;
+        
+        const now = new Date();
+        const is24h = localStorage.getItem('authntcg-clock-24h') !== 'false';
+        const locale = is24h ? 'id-ID' : 'en-US';
+        lockClock.innerText = now.toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit', hour12: !is24h }).replace('.', ':');
+        lockDate.innerText = now.toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long' });
+    },
+
+    async playBootSequence() {
+        this.bootScreen.classList.remove('hidden');
+        
+        const asciiArt = String.raw`
+       =========           !!!  
+     =============         !!!  
+   =====                   !!!  
+  ====                     !!!  
+ ====       ========       !!!  
+====            ====            
+======        ======       !!!  
+  ================         !!!  
+    ============           !!!  
+        `;
+
+        const bootLogs = [
+            "BIOS Date 01/01/26 10:00:00 Ver 1.00",
+            "CPU: AuthntcG Quantum Processor @ 4.20GHz",
+            "Memory Test: 640K OK",
+            "Initializing AuthntcG OS kernel...",
+            "Loading ACPI tables... OK",
+            "Mounting root filesystem... OK",
+            "Starting system message bus... OK",
+            "Loading kernel modules... OK",
+            "Starting network manager... OK",
+            "Starting display manager... OK",
+            "Boot sequence complete. Welcome to AuthntcG Web OS!"
+        ];
+
+        this.termText.innerHTML = '<span class="term-cursor"></span>';
+        this.termText.style.opacity = '1';
+        this.termText.classList.remove('hidden');
+        
+        const modernScreen = document.getElementById('boot-modern-screen');
+        modernScreen.classList.add('hidden');
+        modernScreen.classList.add('opacity-0');
+
+        const cursor = this.termText.querySelector('.term-cursor');
+
+        const typeWriter = async (text, minSpeed = 5, maxSpeed = 20) => {
+            const span = document.createElement('span');
+            this.termText.insertBefore(span, cursor);
+            for (let char of text) {
+                span.textContent += char;
+                if (char !== ' ' && char !== '\n') {
+                    await new Promise(r => setTimeout(r, Math.random() * (maxSpeed - minSpeed) + minSpeed));
+                }
+            }
+            const br = document.createElement('br');
+            this.termText.insertBefore(br, cursor);
+            this.termText.scrollTop = this.termText.scrollHeight;
+        };
+
+        // Delay awal blinking cursor
+        await new Promise(r => setTimeout(r, 800));
+
+        // 1. Animasi pengetikan instruksi manual pengguna
+        await typeWriter("root@authntcg:~# ./start_os.sh", 30, 80);
+        await new Promise(r => setTimeout(r, 400));
+        
+        // 2. Munculkan ASCII Art setelah command dieksekusi
+        const asciiSpan = document.createElement('span');
+        asciiSpan.textContent = asciiArt;
+        this.termText.insertBefore(asciiSpan, cursor);
+        this.termText.scrollTop = this.termText.scrollHeight;
+        
+        await new Promise(r => setTimeout(r, 600));
+
+        // 3. Animasi teks terminal sistem cepat
+        for (let i = 0; i < bootLogs.length; i++) {
+            await typeWriter(bootLogs[i], 2, 8);
+            const delay = i === bootLogs.length - 1 ? 800 : Math.random() * 150 + 50;
+            await new Promise(r => setTimeout(r, delay));
+        }
+
+        this.termText.style.opacity = '0';
+        await new Promise(r => setTimeout(r, 500));
+        this.termText.classList.add('hidden');
+
+        modernScreen.classList.remove('hidden');
+        void modernScreen.offsetWidth;
+        modernScreen.classList.remove('opacity-0');
+
+        await new Promise(r => setTimeout(r, 2500));
+
+        this.lockScreen.classList.remove('hidden');
+        this.lockScreen.style.background = 'rgba(0,0,0,0.4)';
+
+        this.bootScreen.style.transition = 'opacity 0.8s ease-in-out';
+        this.bootScreen.style.opacity = '0';
+        
+        setTimeout(() => {
+            this.bootScreen.classList.add('hidden');
+            this.bootScreen.style.opacity = '1';
+            localStorage.setItem('authntcg-booted', 'true');
+        }, 800);
+    },
+    unlock() {
+        this.lockScreen.style.transform = 'translateY(-100%)';
+        setTimeout(() => {
+            this.lockScreen.classList.add('hidden');
+            this.lockScreen.style.transform = 'translateY(0)';
+        }, 700);
+    },
+
+    togglePowerMenu(e) {
+        if (e) e.stopPropagation();
+        if (this.powerMenu.classList.contains('hidden')) {
+            this.powerMenu.classList.remove('hidden');
+            setTimeout(() => {
+                this.powerMenu.classList.remove('scale-95', 'opacity-0');
+                this.powerMenu.classList.add('scale-100', 'opacity-100');
+            }, 10);
+        } else {
+            this.hidePowerMenu();
+        }
+    },
+
+    hidePowerMenu() {
+        this.powerMenu.classList.remove('scale-100', 'opacity-100');
+        this.powerMenu.classList.add('scale-95', 'opacity-0');
+        setTimeout(() => {
+            this.powerMenu.classList.add('hidden');
+        }, 200);
+    },
+
+    shutdown() {
+        this.hidePowerMenu();
+        this.shutdownScreen.classList.remove('hidden');
+        document.getElementById('shutdown-text').innerText = "Shutting down...";
+        document.getElementById('shutdown-spinner').innerHTML = '<iconify-icon icon="line-md:loading-twotone-loop" class="text-6xl text-gray-300"></iconify-icon>';
+        
+        // Animasi fade in hitam
+        setTimeout(() => {
+            this.shutdownScreen.classList.remove('opacity-0');
+            this.shutdownScreen.classList.add('opacity-100');
+        }, 10);
+
+        localStorage.removeItem('authntcg-booted');
+
+        // Tunggu 3 detik lalu close
+        setTimeout(() => {
+            try {
+                window.close();
+            } catch (e) {}
+            
+            // Jika diblokir browser, tampilkan pesan aman dimatikan
+            document.getElementById('shutdown-spinner').innerHTML = "";
+            document.getElementById('shutdown-text').innerHTML = "It is now safe to close your browser.";
+        }, 3000);
+    },
+
+    restart() {
+        this.hidePowerMenu();
+        this.shutdownScreen.classList.remove('hidden');
+        document.getElementById('shutdown-text').innerText = "Restarting...";
+        document.getElementById('shutdown-spinner').innerHTML = '<iconify-icon icon="line-md:loading-twotone-loop" class="text-6xl text-gray-300"></iconify-icon>';
+        
+        setTimeout(() => {
+            this.shutdownScreen.classList.remove('opacity-0');
+            this.shutdownScreen.classList.add('opacity-100');
+        }, 10);
+
+        localStorage.removeItem('authntcg-booted');
+
+        // Tunggu 2 detik lalu reload
+        setTimeout(() => {
+            location.reload();
+        }, 2000);
+    }
+};
+
 const App = {
     async init() {
+        BootManager.init();
         window.AppZIndex = 100;
         window.WindowManager = WindowManager;
         WindowManager.init();
@@ -508,30 +606,10 @@ const App = {
         DesktopUI.init();
                 await UIManager.init();
         await WindowManager.restoreState();
-        this.startGeoTracking();
+        DesktopUI.startGeoTracking();
         window.dispatchEvent(new Event('app:ready')); // Event khusus jika ingin hook custom behavior setelah app siap
     },
 
-    startGeoTracking() {
-        if (!navigator.geolocation) return console.error("Geolocation not supported");
-
-        const updatePosition = (position) => {
-            const {
-                latitude,
-                longitude
-            } = position.coords;
-            WeatherService.fetchWeather(latitude, longitude);
-            WeatherService.fetchLocationName(latitude, longitude);
-        };
-
-        // First run
-        navigator.geolocation.getCurrentPosition(updatePosition, err => console.error(err));
-
-        // Interval run
-        setInterval(() => {
-            navigator.geolocation.getCurrentPosition(updatePosition, err => console.error(err));
-        }, AppConfig.WEATHER.REFRESH_INTERVAL);
-    }
 };
 
 /**
@@ -540,8 +618,86 @@ const App = {
 const DesktopUI = {
     activeCalDate: new Date(),
 
+
+
+
+    async fetchAndRenderWeather(lat, lon) {
+        try {
+            const data = await Utils.fetchWeatherData(lat, lon);
+            const weatherMeta = Utils.getWeatherMeta(data.current.weather_code);
+            
+            const tempEls = document.querySelectorAll('.weather-temp');
+            const descEls = document.querySelectorAll('.weather-desc');
+            const iconEls = document.querySelectorAll('.weather-icon');
+            
+            tempEls.forEach(el => el.innerHTML = `${Math.round(data.current.temperature_2m)}&deg;C`);
+            descEls.forEach(el => el.textContent = weatherMeta.msg);
+            iconEls.forEach(el => el.setAttribute('icon', weatherMeta.icon));
+            
+            // Apply dynamic weather background & hardware-accelerated animations
+            const weatherWidget = document.getElementById('weather-widget-card');
+            if (weatherWidget) {
+                if (weatherMeta.bg) weatherWidget.style.background = weatherMeta.bg;
+                
+                // Remove existing animation classes
+                weatherWidget.classList.remove('weather-anim-sun', 'weather-anim-clouds', 'weather-anim-rain', 'weather-anim-storm');
+                
+                // Add new animation class if exists
+                if (weatherMeta.anim) {
+                    weatherWidget.classList.add(weatherMeta.anim);
+                }
+            }
+
+            // Fetch and set location name
+            try {
+                const locData = await Utils.fetchLocationData(lat, lon);
+                const locName = locData.city || locData.locality || "Unknown Location";
+                const locEl = document.getElementById('weather-location-name');
+                if (locEl) locEl.textContent = locName;
+            } catch (e) {
+                console.warn('Geocode API Error', e);
+            }
+        } catch(err) {
+            console.error('Desktop Weather Fetch Error:', err);
+            const descEls = document.querySelectorAll('.weather-desc');
+            descEls.forEach(el => el.textContent = 'Offline');
+        }
+    },
+
+    startGeoTracking() {
+        if (!navigator.geolocation) return console.error("Geolocation not supported");
+
+        const updatePosition = (position) => {
+            const { latitude, longitude } = position.coords;
+            this.fetchAndRenderWeather(latitude, longitude);
+        };
+
+        navigator.geolocation.getCurrentPosition(updatePosition, err => console.error(err));
+        
+        setInterval(() => {
+            navigator.geolocation.getCurrentPosition(updatePosition, () => {});
+        }, AppConfig.WEATHER.REFRESH_INTERVAL);
+    },
+
     init() {
         this.startMenu = document.getElementById('start-menu');
+        
+        // Start Menu Search Functionality
+        const searchInput = document.getElementById('start-search-input');
+        if (searchInput) {
+            searchInput.addEventListener('input', (e) => {
+                const query = e.target.value.toLowerCase();
+                const items = document.querySelectorAll('.start-app-item');
+                items.forEach(item => {
+                    const nameEl = item.querySelector('.start-app-name');
+                    if (nameEl && nameEl.innerText.toLowerCase().includes(query)) {
+                        item.style.display = 'flex';
+                    } else {
+                        item.style.display = 'none';
+                    }
+                });
+            });
+        }
         this.clockPanel = document.getElementById('clock-panel');
         this.ctxDesktop = document.getElementById('desktop-context-menu');
         this.ctxIcon = document.getElementById('icon-context-menu');
@@ -669,8 +825,10 @@ const DesktopUI = {
         setInterval(() => {
             const now = new Date();
             
-            // Format waktu Indonesia (id-ID)
-            const timeStr = now.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }).replace(/\./g, ':');
+            const is24h = localStorage.getItem('authntcg-clock-24h') !== 'false';
+            const locale = is24h ? 'id-ID' : 'en-US';
+            
+            const timeStr = now.toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit', hour12: !is24h }).replace(/\./g, ':');
             const dateStr = now.toLocaleDateString('id-ID', { day: '2-digit', month: '2-digit', year: '2-digit' });
             
             const tbTime = document.getElementById('taskbar-time');
@@ -681,8 +839,7 @@ const DesktopUI = {
 
             const panelTime = document.getElementById('panel-time-large');
             if (panelTime && !this.clockPanel.classList.contains('scale-hide')) {
-                // Teks Kalender besar (Misal: Senin, 1 Januari)
-                panelTime.innerText = now.toLocaleTimeString('id-ID', { hour12: false }).replace(/\./g, ':');
+                panelTime.innerText = now.toLocaleTimeString(locale, { hour12: !is24h }).replace(/\./g, ':');
                 document.getElementById('panel-date-large').innerText = now.toLocaleDateString('id-ID', { weekday: 'long', month: 'long', day: 'numeric' });
             }
         }, 1000);

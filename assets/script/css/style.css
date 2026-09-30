@@ -91,26 +91,7 @@ body {
     outline: none;
 }
 
-/* Component: Preloader */
-.preload-page {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-color: var(--bg-overlay);
-    backdrop-filter: blur(10px);
-    z-index: 99999;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: opacity 0.3s ease;
-}
 
-.preload-hidden {
-    opacity: 0;
-    pointer-events: none;
-}
 
 /* Component: Progress Bar */
 progress {
@@ -878,4 +859,106 @@ body#desktop-body {
 
 .calendar-day.text-gray-400 {
     opacity: 0.4;
+}
+/* Glassmorphism Scrollbar */
+.glass-scrollbar::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+.glass-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+}
+.glass-scrollbar::-webkit-scrollbar-thumb {
+    background: rgba(150, 150, 150, 0.3);
+    border-radius: 10px;
+}
+.glass-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: rgba(150, 150, 150, 0.5);
+}
+[data-bs-theme="dark"] .glass-scrollbar::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.2);
+}
+[data-bs-theme="dark"] .glass-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.3);
+}
+
+/* =========================================
+   WEATHER WIDGET HARDWARE ACCELERATED ANIMATIONS
+   ========================================= */
+
+/* Base Overlay Setup */
+#weather-widget-card::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    pointer-events: none;
+    z-index: 1; /* Below the text, above background */
+    opacity: 0;
+    transition: opacity 0.5s ease;
+}
+
+/* 1. RAIN ANIMATION */
+#weather-widget-card.weather-anim-rain::before {
+    opacity: 1;
+    background-image: url("data:image/svg+xml,%3Csvg width='200' height='200' xmlns='http://www.w3.org/2000/svg'%3E%3Cg stroke='rgba(255,255,255,0.15)' stroke-linecap='round'%3E%3Cline x1='20' y1='10' x2='18' y2='40' stroke-width='0.5' /%3E%3Cline x1='70' y1='50' x2='72' y2='90' stroke-width='0.8' /%3E%3Cline x1='120' y1='20' x2='117' y2='60' stroke-width='0.4' /%3E%3Cline x1='160' y1='80' x2='162' y2='130' stroke-width='1.0' /%3E%3Cline x1='40' y1='110' x2='42' y2='140' stroke-width='0.6' /%3E%3Cline x1='90' y1='140' x2='88' y2='190' stroke-width='0.5' /%3E%3Cline x1='140' y1='160' x2='141' y2='195' stroke-width='0.7' /%3E%3Cline x1='190' y1='30' x2='187' y2='80' stroke-width='0.5' /%3E%3C/g%3E%3C/svg%3E");
+    background-size: 200px 200px;
+    animation: weatherRainFall 0.8s linear infinite;
+}
+
+/* 2. CLOUDS ANIMATION */
+#weather-widget-card.weather-anim-clouds::before {
+    opacity: 1;
+    background-image: url("data:image/svg+xml,%3Csvg width='150' height='150' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M30 80 a20 20 0 0 1 20 -20 a30 30 0 0 1 55 10 a20 20 0 0 1 0 40 h-75 a20 20 0 0 1 -0 -30z' fill='rgba(255,255,255,0.08)'/%3E%3C/svg%3E");
+    background-size: 150px 150px;
+    animation: weatherCloudFloat 20s linear infinite;
+}
+
+/* 3. SUN ANIMATION (Pulse/Glow) */
+#weather-widget-card.weather-anim-sun::before {
+    opacity: 1;
+    background: radial-gradient(circle at 80% 20%, rgba(255,255,255,0.4) 0%, rgba(255,255,255,0) 50%);
+    animation: weatherSunPulse 4s ease-in-out infinite alternate;
+}
+
+/* 4. STORM ANIMATION (Lightning flashes + heavy rain) */
+#weather-widget-card.weather-anim-storm::before {
+    opacity: 1;
+    background-image: url("data:image/svg+xml,%3Csvg width='200' height='200' xmlns='http://www.w3.org/2000/svg'%3E%3Cg stroke='rgba(255,255,255,0.2)' stroke-linecap='round'%3E%3Cline x1='20' y1='10' x2='18' y2='40' stroke-width='0.6' /%3E%3Cline x1='70' y1='50' x2='73' y2='90' stroke-width='1.0' /%3E%3Cline x1='120' y1='20' x2='117' y2='60' stroke-width='0.5' /%3E%3Cline x1='160' y1='80' x2='163' y2='130' stroke-width='1.2' /%3E%3Cline x1='40' y1='110' x2='42' y2='140' stroke-width='0.7' /%3E%3Cline x1='90' y1='140' x2='88' y2='190' stroke-width='0.6' /%3E%3Cline x1='140' y1='160' x2='142' y2='195' stroke-width='0.9' /%3E%3Cline x1='190' y1='30' x2='187' y2='80' stroke-width='0.6' /%3E%3C/g%3E%3C/svg%3E");
+    background-size: 200px 200px;
+    animation: weatherRainFall 0.4s linear infinite;
+}
+#weather-widget-card.weather-anim-storm::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    z-index: 2;
+    background-color: rgba(255,255,255,0.8);
+    opacity: 0;
+    animation: weatherLightning 6s infinite;
+}
+
+@keyframes weatherRainFall {
+    0% { transform: rotate(-20deg) translateY(0); }
+    100% { transform: rotate(-20deg) translateY(200px); }
+}
+
+@keyframes weatherCloudFloat {
+    0% { transform: translateX(0); }
+    100% { transform: translateX(-150px); }
+}
+
+@keyframes weatherSunPulse {
+    0% { transform: scale(1); opacity: 0.5; }
+    100% { transform: scale(1.5); opacity: 1; }
+}
+
+@keyframes weatherLightning {
+    0%, 95%, 100% { opacity: 0; }
+    96% { opacity: 0.8; }
+    97% { opacity: 0; }
+    98% { opacity: 0.6; }
 }

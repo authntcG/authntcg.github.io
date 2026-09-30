@@ -48,21 +48,26 @@ const QRGeneratorLogic = {
             const type = e.target.value;
             let html = '';
 
+            const labelClass = 'block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1';
+            const inputClass = 'w-full px-3 py-1.5 border border-gray-300 dark:border-gray-600 rounded-xl text-sm bg-white dark:bg-gray-800/50 backdrop-blur-md outline-none focus:border-blue-500';
+
             if (type === 'url') {
-                html = `<label class="form-label small">Masukkan Tautan URL</label>
-                        <input type="url" id="qr-input-url" class="form-control form-control-sm input-mica" value="https://authntcg.github.io" placeholder="https://contoh.com">`;
+                html = `<label class="${labelClass}">Masukkan Tautan URL</label>
+                        <input type="url" id="qr-input-url" class="${inputClass}" value="https://authntcg.github.io" placeholder="https://contoh.com">`;
             } else if (type === 'text') {
-                html = `<label class="form-label small">Masukkan Teks</label>
-                        <textarea id="qr-input-text" class="form-control form-control-sm input-mica" rows="3" placeholder="Ketik pesan Anda di sini..."></textarea>`;
+                html = `<label class="${labelClass}">Masukkan Teks</label>
+                        <textarea id="qr-input-text" class="${inputClass}" rows="3" placeholder="Ketik pesan Anda di sini..."></textarea>`;
             } else if (type === 'email') {
-                html = `<div class="mb-2"><label class="form-label small">Alamat Email</label><input type="email" id="qr-input-email" class="form-control form-control-sm input-mica" placeholder="contoh@email.com"></div>
-                        <div class="mb-2"><label class="form-label small">Subjek</label><input type="text" id="qr-input-subject" class="form-control form-control-sm input-mica" placeholder="Judul Pesan"></div>
-                        <div><label class="form-label small">Pesan</label><textarea id="qr-input-body" class="form-control form-control-sm input-mica" rows="2" placeholder="Isi pesan..."></textarea></div>`;
+                html = `<div class="mb-3"><label class="${labelClass}">Alamat Email</label><input type="email" id="qr-input-email" class="${inputClass}" placeholder="contoh@email.com"></div>
+                        <div class="mb-3"><label class="${labelClass}">Subjek</label><input type="text" id="qr-input-subject" class="${inputClass}" placeholder="Judul Pesan"></div>
+                        <div><label class="${labelClass}">Pesan</label><textarea id="qr-input-body" class="${inputClass}" rows="2" placeholder="Isi pesan..."></textarea></div>`;
             } else if (type === 'wifi') {
-                html = `<div class="mb-2"><label class="form-label small">Nama Wi-Fi (SSID)</label><input type="text" id="qr-input-ssid" class="form-control form-control-sm input-mica" placeholder="Nama Jaringan"></div>
-                        <div class="mb-2"><label class="form-label small">Kata Sandi</label><input type="text" id="qr-input-pass" class="form-control form-control-sm input-mica" placeholder="Password Wi-Fi"></div>
-                        <div class="row g-2"><div class="col-6"><label class="form-label small">Keamanan</label><select id="qr-input-enc" class="form-select form-select-sm input-mica"><option value="WPA">WPA/WPA2</option><option value="WEP">WEP</option><option value="nopass">Tanpa Password</option></select></div>
-                        <div class="col-6"><label class="form-label small">Jaringan Tersembunyi</label><select id="qr-input-hidden" class="form-select form-select-sm input-mica"><option value="false">Tidak</option><option value="true">Ya (Hidden)</option></select></div></div>`;
+                html = `<div class="mb-3"><label class="${labelClass}">Nama Wi-Fi (SSID)</label><input type="text" id="qr-input-ssid" class="${inputClass}" placeholder="Nama Jaringan"></div>
+                        <div class="mb-3"><label class="${labelClass}">Kata Sandi</label><input type="text" id="qr-input-pass" class="${inputClass}" placeholder="Password Wi-Fi"></div>
+                        <div class="grid grid-cols-2 gap-3">
+                            <div><label class="${labelClass}">Keamanan</label><select id="qr-input-enc" class="${inputClass}"><option value="WPA">WPA/WPA2</option><option value="WEP">WEP</option><option value="nopass">Tanpa Password</option></select></div>
+                            <div><label class="${labelClass}">Jaringan Tersembunyi</label><select id="qr-input-hidden" class="${inputClass}"><option value="false">Tidak</option><option value="true">Ya (Hidden)</option></select></div>
+                        </div>`;
             }
 
             container.innerHTML = html;
@@ -135,6 +140,9 @@ const QRGeneratorLogic = {
                 qrOptions: {
                     errorCorrectionLevel: 'H' // Pastikan selalu High
                 },
+                backgroundOptions: {
+                    color: document.getElementById('qr-bg-color')?.value || '#ffffff'
+                },
                 dotsOptions: {
                     type: document.getElementById('qr-dots-type')?.value || 'rounded',
                     color: document.getElementById('qr-dots-color')?.value || '#000000'
@@ -154,7 +162,7 @@ const QRGeneratorLogic = {
         };
 
         // 4. Pasang event "input" dengan pengecekan aman (Safety Check)
-        const controls = ['qr-size', 'qr-margin', 'qr-dots-type', 'qr-dots-color', 'qr-corner-type', 'qr-corner-color', 'qr-dot-type', 'qr-dot-color', 'qr-logo-size'];
+        const controls = ['qr-size', 'qr-margin', 'qr-dots-type', 'qr-dots-color', 'qr-corner-type', 'qr-corner-color', 'qr-dot-type', 'qr-dot-color', 'qr-logo-size', 'qr-bg-color'];
         controls.forEach(id => {
             const el = document.getElementById(id);
             if (el) {
@@ -208,10 +216,12 @@ const QRGeneratorLogic = {
                 if (file) {
                     const reader = new FileReader();
                     reader.onload = (event) => {
+                        this.currentLogo = event.target.result;
                         this.qrCode.update({ image: event.target.result });
                     };
                     reader.readAsDataURL(file);
                 } else {
+                    this.currentLogo = "";
                     this.qrCode.update({ image: "" });
                 }
             });

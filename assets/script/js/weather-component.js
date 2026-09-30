@@ -10,8 +10,8 @@ class AppWeatherWidget extends HTMLElement {
     connectedCallback() {
         // Tampilan skeleton/loading awal
         this.innerHTML = `
-            <div class="bg-white dark:bg-gray-800/70 backdrop-blur-md rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 h-full">
-                <div class="p-4 flex justify-center items-center h-full min-h-[150px]">
+            <div class="rounded-3xl p-5 shadow-sm border border-gray-200/60 dark:border-gray-700/60 bg-white/70 dark:bg-gray-800/70 backdrop-blur-xl transition-all group hover:shadow-md h-full">
+                <div class="flex justify-center items-center h-full min-h-[150px]">
                     <div class="animate-spin inline-block w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full" role="status"></div>
                 </div>
             </div>
@@ -25,26 +25,21 @@ class AppWeatherWidget extends HTMLElement {
         const windDir = Utils.getWindDirection(current.wind_direction_10m);
 
         this.innerHTML = `
-        <div class="bg-white dark:bg-gray-800/70 backdrop-blur-md rounded-xl shadow-sm border border-gray-200 dark:border-gray-700">
-            <div class="p-4">
+        <div class="rounded-3xl p-5 shadow-sm border border-gray-200/60 dark:border-gray-700/60 bg-white/70 dark:bg-gray-800/70 backdrop-blur-xl transition-all group hover:shadow-md">
+            <div>
                 <div class="flex flex-wrap -mx-2">
                     <div class="w-full px-2 mb-2">
                         <div class="flex items-center">
-                            <div class="w-2/3">
+                            <div class="w-full">
                                 <h5 class="text-3xl font-light">Weather Info</h5>
-                            </div>
-                            <div class="w-1/3 flex justify-end">
-                                <app-button extra-class="btn-info-modal" variant="transparent" data-bs-toggle="modal" data-bs-target="#infoModal" data-latitude="${lat}" data-longitude="${lon}">
-                                    <i class="bi bi-info-circle-fill text-xl text-blue-500 hover:text-blue-600 transition-colors"></i>
-                                </app-button>
                             </div>
                         </div>
                     </div>
                     <div class="w-full lg:w-2/3 px-2 mb-4 lg:mb-0">
                         <div class="flex justify-center items-center h-full">
                             <div class="flex flex-wrap w-full items-center">
-                                <div class="w-full">
-                                    <p class="${meta.icon} text-center text-7xl font-light mb-[-15px]"></p>
+                                <div class="w-full flex justify-center text-center">
+                                    <iconify-icon icon="${meta.icon}" class="text-7xl font-light mb-[-15px] text-blue-500"></iconify-icon>
                                 </div>
                                 <div class="w-full">
                                     <h5 class="text-center text-xl font-medium mb-1">${meta.msg}</h5>
@@ -58,10 +53,10 @@ class AppWeatherWidget extends HTMLElement {
                     <div class="w-full lg:w-1/3 px-2">
                         <div class="flex flex-wrap lg:flex-col -mx-1 lg:mx-0 hidden md:flex">
                             <div class="w-1/2 lg:w-full px-1 lg:px-0 mb-2">
-                                <div class="bg-white dark:bg-gray-800/50 dark:bg-gray-800/50 rounded-lg p-3 shadow-sm border border-gray-100 dark:border-gray-700"><p class="m-0 text-sm text-gray-700 dark:text-gray-200"><i class="bi bi-info-circle mr-1"></i> ${meta.msg}</p></div>
+                                <div class="bg-white dark:bg-gray-800/50 dark:bg-gray-800/50 rounded-lg p-3 shadow-sm border border-gray-100 dark:border-gray-700"><p class="m-0 text-sm text-gray-700 dark:text-gray-200"><iconify-icon icon="fluent:info-24-regular" class="mr-1"></iconify-icon> ${meta.msg}</p></div>
                             </div>
                             <div class="w-1/2 lg:w-full px-1 lg:px-0 mb-2">
-                                <div class="bg-white dark:bg-gray-800/50 dark:bg-gray-800/50 rounded-lg p-3 shadow-sm border border-gray-100 dark:border-gray-700"><p class="m-0 text-sm text-gray-700 dark:text-gray-200"><i class="bi bi-wind mr-1"></i> ${current.wind_speed_10m} ${units.wind_speed_10m} (${windDir})</p></div>
+                                <div class="bg-white dark:bg-gray-800/50 dark:bg-gray-800/50 rounded-lg p-3 shadow-sm border border-gray-100 dark:border-gray-700"><p class="m-0 text-sm text-gray-700 dark:text-gray-200"><iconify-icon icon="fluent:weather-squalls-24-regular" class="mr-1"></iconify-icon> ${current.wind_speed_10m} ${units.wind_speed_10m} (${windDir})</p></div>
                             </div>
                         </div>
                     </div>
@@ -171,7 +166,7 @@ class AppWeatherDetails extends HTMLElement {
                 <div class="flex-shrink-0 text-center rounded-xl p-3 border shadow-sm ${isNow} min-w-[80px]">
                     <div class="flex flex-col items-center">
                         <small class="text-sm font-medium mb-1">${date.getHours()}:00</small>
-                        <i class="${meta.icon} text-3xl mb-1"></i>
+                        <iconify-icon icon="${meta.icon}" class="text-3xl mb-1 text-blue-500"></iconify-icon>
                         <p class="m-0 text-sm">${hourly.temperature_2m[i]} ${units.temperature_2m}</p>
                     </div>
                 </div>`;
@@ -187,7 +182,7 @@ class AppWeatherDetails extends HTMLElement {
             return `
                 <tr class="border-b border-gray-100 dark:border-gray-700 last:border-0">
                     <td class="py-3 px-2 whitespace-nowrap">${dateStr}</td>
-                    <td class="py-3 px-2"><i class="${meta.icon} mr-1 text-gray-500"></i> ${meta.msg}</td>
+                    <td class="py-3 px-2"><iconify-icon icon="${meta.icon}" class="mr-1 text-gray-500"></iconify-icon> ${meta.msg}</td>
                     <td class="py-3 px-2 text-right text-blue-500 font-medium">${daily.temperature_2m_min[i]}°</td>
                     <td class="py-3 px-2 text-right text-red-500 font-medium">${daily.temperature_2m_max[i]}°</td>
                 </tr>`;
@@ -199,14 +194,14 @@ class AppWeatherDetails extends HTMLElement {
         this.innerHTML = `
             <div class="flex flex-wrap -mx-2">
                 <div class="w-full lg:w-1/2 px-2 mb-4">
-                    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 h-full">
+                    <div class="rounded-3xl shadow-sm border border-gray-200/60 dark:border-gray-700/60 bg-gray-50/50 dark:bg-gray-900/50 backdrop-blur-md h-full">
                         <div class="p-5">
-                            <h6 class="text-lg font-medium mb-3"><i class="bi bi-calendar-day mr-2"></i> Hari Ini (Per Jam)</h6>
+                            <h6 class="text-lg font-medium mb-3"><iconify-icon icon="fluent:calendar-day-24-regular" class="mr-2"></iconify-icon> Hari Ini (Per Jam)</h6>
                             <div class="flex overflow-x-auto space-x-3 pb-4 mb-4 snap-x">${hourlyRows}</div>
-                            <h6 class="text-lg font-medium mb-3"><i class="bi bi-calendar-week mr-2"></i> Mingguan</h6>
+                            <h6 class="text-lg font-medium mb-3"><iconify-icon icon="fluent:calendar-3-day-24-regular" class="mr-2"></iconify-icon> Mingguan</h6>
                             <div class="overflow-x-auto">
                                 <table class="w-full text-left text-sm">
-                                    <thead><tr class="text-gray-500 border-b border-gray-200 dark:border-gray-700"><th class="py-2 px-2 font-normal"><i class="bi bi-calendar-date"></i></th><th class="py-2 px-2 font-normal"><i class="bi bi-cloud-sun-fill"></i></th><th class="py-2 px-2 font-normal text-right"><i class="bi bi-thermometer-low"></i></th><th class="py-2 px-2 font-normal text-right"><i class="bi bi-thermometer-high"></i></th></tr></thead>
+                                    <thead><tr class="text-gray-500 border-b border-gray-200 dark:border-gray-700"><th class="py-2 px-2 font-normal"><iconify-icon icon="fluent:calendar-ltr-24-regular"></iconify-icon></th><th class="py-2 px-2 font-normal"><iconify-icon icon="fluent:weather-partly-cloudy-day-24-filled"></iconify-icon></th><th class="py-2 px-2 font-normal text-right"><iconify-icon icon="fluent:temperature-24-regular"></iconify-icon></th><th class="py-2 px-2 font-normal text-right"><iconify-icon icon="fluent:temperature-24-filled"></iconify-icon></th></tr></thead>
                                     <tbody>${dailyRows}</tbody>
                                 </table>
                             </div>
@@ -214,11 +209,11 @@ class AppWeatherDetails extends HTMLElement {
                     </div>
                 </div>
                 <div class="w-full lg:w-1/2 px-2 mb-4">
-                    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 h-full">
+                    <div class="rounded-3xl shadow-sm border border-gray-200/60 dark:border-gray-700/60 bg-gray-50/50 dark:bg-gray-900/50 backdrop-blur-md h-full">
                         <div class="p-5">
-                            <h6 class="text-lg font-medium mb-3 text-blue-600"><i class="bi bi-chat-right-text mr-2"></i> Summary</h6>
+                            <h6 class="text-lg font-medium mb-3 text-blue-600"><iconify-icon icon="fluent:chat-24-regular" class="mr-2"></iconify-icon> Summary</h6>
                             <p class="text-gray-700 dark:text-gray-200 leading-relaxed">${humanSummaryText}</p>
-                            <h6 class="text-lg font-medium mt-6 mb-3 text-green-600"><i class="bi bi-lightbulb mr-2"></i> Saran Aktifitas</h6>
+                            <h6 class="text-lg font-medium mt-6 mb-3 text-green-600"><iconify-icon icon="fluent:lightbulb-24-regular" class="mr-2"></iconify-icon> Saran Aktifitas</h6>
                             <p class="text-gray-700 dark:text-gray-200 leading-relaxed">${humanAdviceText}</p>
                         </div>
                     </div>
@@ -232,7 +227,7 @@ class AppWeatherDetails extends HTMLElement {
         this.innerHTML = `
             <div class="bg-red-50 rounded-xl shadow-sm border border-red-200 h-full">
                 <div class="p-5 flex flex-col justify-center items-center h-full min-h-[150px] text-red-500 text-center">
-                    <i class="bi bi-exclamation-triangle-fill mb-3 text-5xl"></i>
+                    <iconify-icon icon="fluent:warning-24-filled" class="mb-3 text-5xl"></iconify-icon>
                     <h5 class="text-xl font-medium mb-2 text-red-700">Gagal Memuat Cuaca</h5>
                     <p class="text-red-600">${message}</p>
                 </div>

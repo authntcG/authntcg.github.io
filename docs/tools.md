@@ -33,6 +33,9 @@ flowchart TD
 2. OS menciptakan *Canvas/Image bayangan* (Offscreen) yang berukuran sama persis dengan aslinya (100% resolusi).
 3. Setelah TensorFlow mendeteksi koordinatnya, fungsi *Offset Math* akan melakukan penskalaan perbandingan antara "Resolusi Asli" vs "Ukuran Layar UI Terkini", lalu menambahkan variabel "margin" (kotak hitam layar). Hasilnya? Deteksi sempurna!
 
+### B. Tailwind CSS Cross-Dimensional Theme Sync
+Semua gaya gelap (Dark Mode) pada aplikasi ini sepenuhnya sinkron dengan OS Induk. Ini dicapai bukan dengan @media prefers-color-scheme, melainkan dengan 	ailwind.config khusus di dalam blok <head> aplikasi yang memetakan pemantik mode gelap kepada mutasi atribut data-bs-theme="dark" milik OS.
+
 ---
 
 ## 2. QR Code Generator (`project/qr-code-generator`)
@@ -65,27 +68,51 @@ sequenceDiagram
 ```
 
 **Penjelasan:**
-Sistem menggunakan modul pembantu eksternal (`html2canvas`) untuk meniru tangkapan layar spesifik pada elemen div bingkai tersebut. Sistem mengaturnya pada skala ketajaman `3x` agar hasil potret DOM tidak terlihat *pixelated* pecah saat dicetak oleh pengguna, menciptakan manipulasi seolah peramban men-*generate* grafis utuh.
+Saat sakelar diklik, aplikasi memanggil rute handleMenuAction di OS Induk. OS kemudian mengubah temanya sendiri, lalu memaksa penulisan ulang atribut data-bs-theme ke seluruh Iframe. Di dalam jendela *Settings*, sebuah **MutationObserver** tingkat tinggi mengawasi tubuh HTML-nya sendiri. Begitu atributnya diubah oleh "Tangan Tak Terlihat" (OS Induk), sang observer seketika membangunkan fungsi updateToggleUI() sehingga tuas bereaksi tanpa butuh panggilan *PostMessage* yang rumit.
+---
+
+## 3. QR Code Generator (`project/qr-code-generator`)
+
+Merupakan pionir dari **Golden Standard UI** pada ekosistem AuthntcG Web OS. Aplikasi utilitas klasik ini telah direkayasa ulang untuk mencerminkan bahasa desain OS yang modern.
+
+### Arsitektur UI (Bento Grid)
+- **Fluid Layouts**: Menggunakan kueri kontainer (`@container`) Tailwind CSS yang bereaksi terhadap perubahan dimensi lebar jendela (bukan sekadar lebar monitor pengguna).
+- **DOM Independence**: Berjalan di dalam lingkungan iframe yang memiliki cek keamanan `window.self !== window.top` untuk mendeteksi apakah ia sedang dijalankan dalam mode Windowed (membutuhkan background transparan) atau Standalone.
 
 ---
 
-## 3. Inspiro Dashboard (`project/inspiro`)
+## 4. QA Playground (Weather Simulator) (`tools/dev-playground`)
 
-Ini adalah aplikasi pertama yang membuktikan kekuatan OS ini dalam memuat Dasbor tingkat-BUMN (berisi sistem grid rumit, Peta interaktif Leaflet.js, dan berbagai widget lainnya) secara mandiri.
+Sistem operasi ini tidak hanya ramah pengguna, tetapi juga dilengkapi alat uji coba perangkat lunak (*Software Testing Tool*) terintegrasi. 
+
+### Cross-Frame Injection & Simulator
+Alat ini dibangun dengan struktur *Tab Vanilla JS* untuk memudahkan pengembangan fitur OS baru di masa mendatang tanpa menumpuk kode.
 
 ```mermaid
-flowchart LR
-    AppOS(("Main OS (script.js)")) -->|Membuka Jendela| WindowSystem["<app-window>"]
-    WindowSystem -->|Memuat URL| Iframe["iframe src='inspiro/index.html'"]
+stateDiagram-v2
+    [*] --> StandaloneMode
+    [*] --> IframeMode
     
-    subgraph InspiroSandbox ["Inspiro Iframe Sandbox"]
-        DashboardUI["Dashboard HTML"]
-        Leaflet["Leaflet.js Peta"]
-        Theme["Theme Listener"]
-    end
+    state IframeMode {
+        AppReady --> ClickSimulation: User Memilih Kondisi
+        ClickSimulation --> window.parent: Kirim Perintah Injeksi
+        window.parent --> DOMWidget: Hapus Kelas Animasi Lama
+        window.parent --> DOMWidget: Pasang Kelas Animasi Baru
+        window.parent --> DOMWidget: Paksa Ganti Palet CSS
+    }
     
-    Iframe --> InspiroSandbox
-    Theme -.-> |Disuntik oleh OS| AppOS
+    state StandaloneMode {
+        AppReady --> Alert: window.parent = null
+        Alert --> [*]: Injeksi Gagal
+    }
 ```
 
-Aplikasi ini mencontohkan konsep **Micro-Frontend** murni. Jika kode di dalam Inspiro Dashboard *crash*, maka layar utama (Desktop OS) tidak akan ikut mati atau terkena imbasnya sedikitpun.
+---
+
+## 5. VyloServe Landing Page (`project/vyloserve`)
+
+Sebuah aplikasi presentasi (*Digital Brochure*) mandiri yang dirancang untuk mengatasi limitasi `X-Frame-Options: deny` dari server eksternal seperti GitHub.
+
+### Arsitektur Konten Otonom
+- **Native OS Feel**: Dibangun menggunakan *Tailwind CSS* untuk menyajikan fitur (*Smart Dashboard*, *Multi-Engine Database*, *PHP FastCGI*) secara elegan menggunakan *Bento Grid*.
+- **Responsive & Seamless**: Dilengkapi dengan logika deteksi `window.self === window.top` untuk memberikan latar belakang transparan saat dibuka dalam modul Iframe OS, menjaga kohesi antarmuka (*UI Cohesion*).
